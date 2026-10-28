@@ -1,0 +1,11 @@
+feature,importance
+pm2_5_lag_1,0.41
+pm2_5_rolling_7,0.19
+pm2_5,0.12
+pm2_5_rolling_3,0.08
+bulan,0.06
+wind_speed_10m,0.04
+pm2_5_lag_7,0.03
+relative_humidity_2m,0.03
+precipitation,0.02
+temperature_2m,0.02

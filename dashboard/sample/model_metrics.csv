@@ -1,0 +1,6 @@
+model,MAE,RMSE,R2
+Persistence (baseline),6.2,9.1,0.71
+Rata-rata 7 hari (baseline),7.4,10.3,0.64
+RandomForest,4.9,7.5,0.81
+ExtraTrees,5.1,7.8,0.8
+HistGradientBoosting,4.8,7.3,0.82
