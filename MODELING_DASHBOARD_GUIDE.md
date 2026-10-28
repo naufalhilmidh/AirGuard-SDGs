@@ -10,7 +10,40 @@ AirGuard diarahkan untuk menjawab pertanyaan berikut:
 
 Hasil analisis tidak boleh menyatakan hubungan sebab-akibat hanya berdasarkan korelasi. Gunakan istilah seperti “berkaitan dengan” atau “memiliki pola yang sama” jika belum ada analisis kausal.
 
-## 2. Kondisi dataset
+## 2. Jenis masalah machine learning
+
+Modeling utama AirGuard adalah forecasting berbasis regresi.
+
+Alasannya:
+
+- `pm2_5` merupakan nilai numerik kontinu.
+- Model perlu memprediksi nilai PM2.5 pada hari berikutnya.
+- Nilai prediksi dapat digunakan untuk menghitung selisih terhadap kondisi hari ini.
+- Angka prediksi lebih informatif untuk dashboard daripada label risiko saja.
+
+Dengan demikian, target utama model adalah:
+
+```text
+target_pm2_5 = nilai PM2.5 pada hari berikutnya
+```
+
+Klasifikasi digunakan sebagai lapisan interpretasi di dashboard. Nilai prediksi PM2.5 diubah menjadi kategori risiko berdasarkan ambang yang dipilih dan didokumentasikan.
+
+Contoh alur:
+
+```text
+Data historis
+    ↓
+Forecasting regresi
+    ↓
+Prediksi PM2.5, misalnya 82.5 µg/m³
+    ↓
+Kategori risiko untuk dashboard
+```
+
+Klasifikasi tidak menjadi model utama pada tahap pertama karena perubahan dari angka PM2.5 menjadi label akan menghilangkan informasi detail. Jika proyek memerlukan model klasifikasi terpisah, model tersebut dapat dibuat sebagai eksperimen lanjutan dengan target seperti `rendah`, `sedang`, atau `tinggi`.
+
+## 3. Kondisi dataset
 
 Dataset gabungan berisi data harian untuk 10 kota:
 
@@ -33,7 +66,7 @@ File yang digunakan untuk modeling:
 data/data_gabungan/airguard_preprocessed.csv
 ```
 
-## 3. Target modeling
+## 4. Target modeling
 
 Target utama:
 
@@ -51,7 +84,7 @@ Contoh:
 
 Artinya, model menggunakan informasi sampai 10 Agustus untuk memprediksi PM2.5 Jakarta pada 11 Agustus.
 
-## 4. Fitur yang disiapkan
+## 5. Fitur yang disiapkan
 
 ### Fitur waktu
 
@@ -83,7 +116,7 @@ Artinya, model menggunakan informasi sampai 10 Agustus untuk memprediksi PM2.5 J
 
 Kolom `kota` tetap dipertahankan. Pada tahap modeling, kolom tersebut perlu diubah menjadi bentuk numerik, misalnya dengan one-hot encoding.
 
-## 5. Variabel yang perlu diperlakukan hati-hati
+## 6. Variabel yang perlu diperlakukan hati-hati
 
 ### `us_aqi`
 
@@ -99,7 +132,7 @@ Gunakan `us_aqi` untuk:
 
 `pm10`, `carbon_monoxide`, `nitrogen_dioxide`, `sulphur_dioxide`, dan `ozone` dapat digunakan sebagai fitur hanya jika nilai variabel tersebut memang tersedia pada waktu prediksi. Untuk eksperimen awal, gunakan PM2.5 historis dan variabel cuaca terlebih dahulu.
 
-## 6. Model yang dibandingkan
+## 7. Model yang dibandingkan
 
 Gunakan model pembanding sebelum memakai machine learning.
 
@@ -120,7 +153,7 @@ Model tree-based sesuai untuk data ini karena dapat mempelajari hubungan nonline
 
 Jika library tambahan tersedia, XGBoost, LightGBM, atau CatBoost dapat digunakan sebagai eksperimen lanjutan. Model tambahan tidak wajib untuk tahap pertama.
 
-## 7. Pembagian data
+## 8. Pembagian data
 
 Jangan menggunakan pembagian data acak. Data memiliki urutan waktu, sehingga pembagian harus mengikuti kronologi.
 
@@ -132,7 +165,7 @@ Contoh pembagian:
 
 Jika diperlukan, gunakan `TimeSeriesSplit` untuk validasi tambahan. Data masa depan tidak boleh masuk ke training.
 
-## 8. Metrik evaluasi
+## 9. Metrik evaluasi
 
 Gunakan metrik berikut:
 
@@ -144,7 +177,7 @@ Jangan menjadikan MAPE sebagai metrik utama karena PM2.5 dapat memiliki nilai re
 
 Hasil evaluasi perlu dibandingkan dengan baseline. Model machine learning hanya dianggap berguna jika performanya lebih baik daripada baseline secara konsisten.
 
-## 9. Output modeling
+## 10. Output modeling
 
 Modeling perlu menghasilkan beberapa output berikut.
 
@@ -212,7 +245,7 @@ models/airguard_model.joblib
 
 Simpan juga encoder atau pipeline preprocessing jika digunakan. Dashboard harus menggunakan pipeline yang sama dengan proses training.
 
-## 10. Isi dashboard
+## 11. Isi dashboard
 
 Dashboard sebaiknya memiliki beberapa bagian berikut.
 
@@ -253,13 +286,13 @@ Tampilkan tanggal ketika PM2.5 melewati ambang risiko yang dipilih. Jelaskan sum
 
 Tampilkan fitur yang paling berpengaruh berdasarkan `feature_importance.csv`. Hindari kalimat yang menyatakan bahwa fitur tersebut pasti menyebabkan polusi. Gunakan kalimat seperti “fitur yang paling banyak digunakan model dalam membuat prediksi”.
 
-## 11. Kategori risiko
+## 12. Kategori risiko
 
 Kategori risiko harus memiliki sumber atau aturan yang jelas. Jangan membuat kategori baru tanpa dokumentasi.
 
 Jika menggunakan kategori berbasis US AQI, simpan batas dan sumbernya dalam dokumentasi proyek. Jika kategori menggunakan ambang PM2.5, tuliskan bahwa kategori tersebut adalah aturan visualisasi proyek dan bukan klaim medis.
 
-## 12. Pemeriksaan sebelum diserahkan
+## 13. Pemeriksaan sebelum diserahkan
 
 Modeling dianggap siap jika:
 
@@ -274,7 +307,7 @@ Modeling dianggap siap jika:
 - Dashboard membaca file output yang benar.
 - Nilai prediksi dan tanggal prediksi dapat dilacak kembali ke kota dan data asalnya.
 
-## 13. Alur kerja singkat
+## 14. Alur kerja singkat
 
 ```text
 airguard_harian_semua_kota.csv
@@ -294,4 +327,4 @@ airguard_predictions.csv
 Dashboard dan interpretasi hasil
 ```
 
-Fokus utama proyek adalah menghasilkan prediksi PM2.5 hari berikutnya yang dapat dibandingkan antar kota dan dapat dijelaskan kepada pengguna dashboard.
+Fokus utama proyek adalah menghasilkan prediksi PM2.5 hari berikutnya yang dapat dibandingkan antar kota. Dashboard kemudian menampilkan angka prediksi tersebut bersama kategori risiko yang dibuat dari aturan ambang yang terdokumentasi.
