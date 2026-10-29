@@ -1,8 +1,9 @@
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from data import EWS, PROVINSI, kota_terbesar, tabel_besok
+from data import EWS, PROVINSI, kode_status, kota_terbesar, tabel_besok
 from ui import BIRU, grid, intro, kepala, kotak, pakai_tema, pill, stat
 
 TB, AKHIR, BESOK = tabel_besok()
@@ -56,10 +57,20 @@ def badan():
 
     # ---- ringkasan status ----
     jumlah = t["status"].value_counts().to_dict()
-    grid("g3", *[
-        stat(f'{s["nama"]} ({s["sebutan"]})', f'{jumlah.get(s["kode"], 0)}',
-             f'dari {len(t)} kabupaten/kota · PM2.5 {s["rentang"]}', "pin" if s["kode"] == 0 else ("awas" if s["kode"] == 2 else "tren"),
-             s["warna"]) for s in EWS])
+    kemarin = pd.Series(kode_status(t["pm_ini"].to_numpy())).value_counts().to_dict()
+
+    def delta(kode):
+        d = jumlah.get(kode, 0) - kemarin.get(kode, 0)
+        if d == 0:
+            return ("sama seperti hari ini", "netral")
+        baik = (d > 0) if kode == 0 else (d < 0 if kode == 2 else None)
+        return (f"{d:+d} dari hari ini", "netral" if baik is None else ("baik" if baik else "buruk"))
+
+    grid("g4",
+         stat("Wilayah dipantau", f"{len(t)}", "kabupaten/kota" + ("" if prov == "Semua provinsi" else f" di {prov}"), "pin", gelap=True),
+         *[stat(f'{s["nama"]} ({s["sebutan"]})', f'{jumlah.get(s["kode"], 0)}', f'PM2.5 {s["rentang"]}',
+                "pin" if s["kode"] == 0 else ("awas" if s["kode"] == 2 else "tren"), s["warna"], delta=delta(s["kode"]))
+           for s in EWS])
 
     # ---- kota utama ----
     utama = t.sort_values("penduduk", ascending=False)
@@ -124,12 +135,15 @@ def badan():
         st.caption("Sepuluh kabupaten/kota dengan prediksi PM2.5 tertinggi pada filter yang dipilih. "
                    "Faktor yang diandalkan model dibahas di halaman Analitik & Evaluasi.")
         top = t.sort_values("pm_besok", ascending=False).head(10)
-        tampil = top[["kota", "provinsi", "pm_ini", "pm_besok"]].copy()
-        tampil["Status"] = top["status"].map(lambda k: EWS[k]["nama"])
-        tampil.columns = ["Kabupaten/kota", "Provinsi", "Hari ini", "Prediksi besok", "Status"]
-        st.dataframe(tampil, hide_index=True, height=35 * 11 + 3, column_config={
-            "Hari ini": st.column_config.NumberColumn(format="%.1f"),
-            "Prediksi besok": st.column_config.NumberColumn(format="%.1f")})
+        mx = max(float(top["pm_besok"].max()), 1.0)
+        baris = "".join(
+            f'<tr><td class="no">{i}</td><td><b>{r.kota}</b></td><td>{r.provinsi}</td><td class="n">{r.pm_ini:.1f}</td>'
+            f'<td class="n">{r.pm_besok:.1f}<span class="mini"><i style="width:{r.pm_besok / mx * 100:.0f}%;'
+            f'background:{EWS[r.status]["warna"]}"></i></span></td><td>{pill(r.status)}</td></tr>'
+            for i, r in enumerate(top.itertuples(), 1))
+        st.markdown('<table class="tabelk"><thead><tr><th></th><th>Kabupaten/kota</th><th>Provinsi</th>'
+                    '<th class="n">Hari ini</th><th class="n">Prediksi besok</th><th>Status</th></tr></thead>'
+                    f"<tbody>{baris}</tbody></table>", unsafe_allow_html=True)
 
 
 badan()

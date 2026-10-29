@@ -166,12 +166,17 @@ def tab_evaluasi(prov):
             "Untuk peringatan dini, recall status Tidak sehat paling penting.\n"
             "- **Precision status**: dari semua hari yang diprediksi berstatus tertentu, berapa persen yang benar."
         )
+    if not np.isnan(ev["skill"]):
+        dm = (f"{abs(ev['skill']) * 100:.0f}% {'lebih baik' if ev['skill'] > 0 else 'lebih buruk'}", "baik" if ev["skill"] > 0 else "buruk")
+    else:
+        dm = None
     grid(
         "g4",
-        stat("MAE", f"{ev['mae']:.2f}", f"µg/m³ · persistence: {ev['mae_pers']:.2f}" if not np.isnan(ev["mae_pers"]) else "µg/m³", "target"),
-        stat("RMSE", f"{ev['rmse']:.2f}", "µg/m³", "grafik"),
+        stat("MAE", f"{ev['mae']:.2f}", f"vs persistence {ev['mae_pers']:.2f}" if not np.isnan(ev["mae_pers"]) else "µg/m³", "target",
+             gelap=True, delta=dm),
+        stat("RMSE", f"{ev['rmse']:.2f}", "µg/m³, lebih menghukum galat besar", "grafik"),
         stat("R²", f"{ev['r2']:.3f}", "makin dekat 1 makin baik", "tren"),
-        stat("Bias", f"{ev['bias']:+.2f}", "µg/m³ · positif = terlalu tinggi", "awas"),
+        stat("Bias", f"{ev['bias']:+.2f}", "µg/m³, positif = terlalu tinggi", "awas"),
     )
     st.caption(f"Dihitung dari {ev['n']:,} pasangan prediksi dan nilai aktual di file prediksi".replace(",", "."))
 
@@ -204,24 +209,24 @@ def tab_evaluasi(prov):
     with kiri:
         with kotak("galat_prov"):
             st.subheader("Galat per provinsi")
-            st.caption("MAE tiap provinsi (seluruh data). Provinsi dengan batang tinggi adalah yang paling sulit diprediksi.")
+            st.caption("MAE tiap provinsi (seluruh data). Batang tua adalah provinsi yang paling sulit diprediksi.")
             g = galat_provinsi()
-            fig3 = px.bar(g, x="provinsi", y="MAE", color="provinsi", color_discrete_map=WARNA_PROVINSI, text_auto=".1f")
-            fig3.update_layout(showlegend=False)
+            fig3 = go.Figure(go.Bar(x=g["provinsi"], y=g["MAE"], text=g["MAE"].round(1), textposition="outside",
+                                    marker_color=[BIRU if v == g["MAE"].max() else "#C7D2FE" for v in g["MAE"]]))
             fig3.update_xaxes(title=None)
-            fig3.update_yaxes(title="MAE (µg/m³)")
+            fig3.update_yaxes(title="MAE (µg/m³)", range=[0, float(g["MAE"].max()) * 1.2])
             st.plotly_chart(pakai_tema(fig3, 320))
     with kanan:
         with kotak("galat_bulan"):
             st.subheader("Galat per bulan")
-            st.caption("MAE menurut bulan kalender. Galat yang naik di musim kemarau biasanya menandakan polusi tinggi "
-                       "memang lebih sulit diprediksi.")
+            st.caption("MAE menurut bulan kalender. Batang tua adalah bulan yang paling sulit diprediksi.")
             b = ev["bulan"].reset_index()
             b.columns = ["bulan", "MAE"]
             b["nama"] = b["bulan"].map(lambda m: BULAN[int(m) - 1][:3])
-            fig4 = px.bar(b, x="nama", y="MAE", color_discrete_sequence=[BIRU], text_auto=".1f")
+            fig4 = go.Figure(go.Bar(x=b["nama"], y=b["MAE"], text=b["MAE"].round(1), textposition="outside",
+                                    marker_color=[BIRU if v == b["MAE"].max() else "#C7D2FE" for v in b["MAE"]]))
             fig4.update_xaxes(title=None)
-            fig4.update_yaxes(title="MAE (µg/m³)")
+            fig4.update_yaxes(title="MAE (µg/m³)", range=[0, float(b["MAE"].max()) * 1.2])
             st.plotly_chart(pakai_tema(fig4, 320))
 
     # ---------- evaluasi status EWS ----------

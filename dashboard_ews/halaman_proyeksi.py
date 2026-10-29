@@ -97,6 +97,22 @@ def badan():
         intro("<b>Cara membaca:</b> proyeksi berasal dari file prakiraan yang disediakan tim pemodelan. "
               "Semakin jauh tanggalnya, semakin besar ketidakpastiannya.")
 
+    # ---------- ringkasan ----------
+    pb0 = tabel_bulan("provinsi").reindex(PROVINSI).dropna(how="all")
+    puncak = pb0.stack()
+    (p_prov, p_bln), p_val = puncak.idxmax(), puncak.max()
+    rata_bln = pb0.mean()
+    bln_top = int(rata_bln.idxmax())
+    rata_prov = pb0.mean(axis=1)
+    n_bahaya = int((pb0.to_numpy() > BATAS_BAHAYA).any(axis=1).sum())
+    grid("g4",
+         stat("Puncak proyeksi bulanan", f"{p_val:.0f}", f"µg/m³ · {p_prov}, {BULAN[int(p_bln) - 1]}", "awas", gelap=True,
+              delta=("Tidak sehat", "buruk") if p_val > BATAS_BAHAYA else None),
+         stat("Bulan paling berisiko", BULAN[bln_top - 1], f"rata-rata {rata_bln.max():.0f} µg/m³ di semua provinsi", "grafik"),
+         stat("Provinsi paling berisiko", rata_prov.idxmax(),
+              f"rata-rata setahun {rata_prov.max():.0f} µg/m³", "pin"),
+         stat("Provinsi melewati batas", f"{n_bahaya} dari {len(pb0)}", f"punya bulan di atas {BATAS_BAHAYA:.0f} µg/m³", "tren"))
+
     # ---------- tren ----------
     with kotak("tren"):
         st.subheader("Tren PM2.5 jangka panjang")

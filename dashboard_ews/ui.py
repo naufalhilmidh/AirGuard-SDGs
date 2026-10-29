@@ -170,6 +170,44 @@ CSS = """
 .bagian {font-size: 1.35rem; font-weight: 700; letter-spacing: -.01em; color: #0F172A; margin: 2rem 0 .2rem;}
 .bagian + .sub {font-size: .92rem; color: #475569; margin-bottom: .9rem;}
 .kartu, .panel, .angkabesar, .bagian, .sub, .catatan, .intro, .kepala, .rek {font-family: 'Inter', sans-serif;}
+
+/* ---- sidebar gelap ---- */
+[data-testid="stHeader"] {background: transparent !important; border-bottom: none !important;}
+[data-testid="stSidebar"] {background: #0B1226 !important; border-right: none;}
+[data-testid="stSidebar"] > div {background: #0B1226;}
+[data-testid="stSidebarHeader"] {padding: 1.4rem 1rem .8rem;}
+[data-testid="stSidebarNav"] {padding: .4rem .6rem;}
+[data-testid="stSidebarNavLink"] {border-radius: 12px !important; padding: .65rem .9rem !important; margin-bottom: 4px; color: #CBD5E1 !important;}
+[data-testid="stSidebarNavLink"] span, [data-testid="stSidebarNavLink"] p {color: #CBD5E1 !important; font-weight: 500;}
+[data-testid="stSidebarNavLink"]:hover {background: rgba(255,255,255,.07) !important;}
+[data-testid="stSidebarNavLink"][aria-current="page"] {background: #2E4FA8 !important;}
+[data-testid="stSidebarNavLink"][aria-current="page"] span, [data-testid="stSidebarNavLink"][aria-current="page"] p {color: #FFFFFF !important; font-weight: 600;}
+[data-testid="stSidebarUserContent"] {padding: 1rem 1.1rem 1.4rem;}
+.sb-info {background: #131C36; border-radius: 14px; padding: 14px 16px; font-size: .8rem; line-height: 1.55; color: #94A3B8; margin-bottom: 10px;}
+.sb-info b {color: #FFFFFF; font-size: .85rem;}
+[data-testid="stSidebar"] .stButton button {background: transparent !important; border: 1px solid #334155 !important; border-radius: 12px !important;}
+[data-testid="stSidebar"] .stButton button p {color: #E2E8F0 !important; font-weight: 600;}
+[data-testid="stSidebar"] .stButton button:hover {background: rgba(255,255,255,.07) !important;}
+.stat.gelap {background: #0F172A !important; border-color: #0F172A !important;}
+.stat.gelap .lab, .stat.gelap .ket {color: #94A3B8;}
+.stat.gelap .val {color: #FFFFFF;}
+.stat.gelap .ic {background: rgba(255,255,255,.1); color: #FFFFFF;}
+.delta {display: inline-block; font-size: .75rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; margin-right: 6px;}
+.delta.baik {background: #D1FAE5; color: #065F46;} .delta.buruk {background: #FEE2E2; color: #991B1B;} .delta.netral {background: #E2E8F0; color: #334155;}
+.stat.gelap .delta.baik {background: rgba(16,185,129,.2); color: #6EE7B7;} .stat.gelap .delta.buruk {background: rgba(239,68,68,.22); color: #FCA5A5;}
+.tabelk {width: 100%; border-collapse: collapse; font-size: .9rem;}
+.tabelk th {text-align: left; font-weight: 500; font-size: .78rem; color: #64748B; padding: 8px 10px; border-bottom: 1px solid #E3E8F2;}
+.tabelk td {padding: 11px 10px; border-bottom: 1px solid #EEF1F7; color: #0F172A;}
+.tabelk tr:last-child td {border-bottom: none;}
+.tabelk .n {text-align: right; font-variant-numeric: tabular-nums;}
+.tabelk .mini {display: inline-block; width: 90px; height: 7px; border-radius: 99px; background: #E8EDF7; vertical-align: middle; margin-left: 10px; overflow: hidden;}
+.tabelk .mini i {display: block; height: 100%; border-radius: 99px;}
+.tabelk .no {color: #94A3B8; width: 28px;}
+.stat .ket .delta {display: table; margin: 0 0 6px;}
+.tabelk, .tabelk th, .tabelk td {border-left: none !important; border-right: none !important; border-top: none !important;}
+.tabelk {border: none !important;}
+.tabelk th {background: transparent !important;}
+.stat .val.kecil {font-size: 1.75rem; line-height: 1.25; margin: 10px 0 6px;}
 </style>
 """
 
@@ -194,12 +232,15 @@ def kartu(judul, isi, atas="", kelas=""):
     return f'<div class="kartu {kelas}">{atas}<div class="jud">{judul}</div><div class="isi">{isi}</div></div>'
 
 
-def stat(label, nilai, ket, ikon, warna=None):
+def stat(label, nilai, ket, ikon, warna=None, gelap=False, delta=None):
+    """delta = (teks, "baik"|"buruk"|"netral") ditampilkan sebagai lencana kecil di baris keterangan."""
     gaya = f' style="--sb:{warna}"' if warna else ""
-    kelas = "stat sb" if warna else "stat"
+    kelas = "stat" + (" sb" if warna else "") + (" gelap" if gelap else "")
+    kls = " kecil" if len(str(nilai)) > 9 else ""
+    d = f'<span class="delta {delta[1]}">{delta[0]}</span>' if delta else ""
     return (f'<div class="kartu {kelas}"{gaya}><div class="atas"><div class="lab">{label}</div>'
             f'<div class="ic">{IKON[ikon]}</div></div>'
-            f'<div class="val">{nilai}</div><div class="ket">{ket}</div></div>')
+            f'<div class="val{kls}">{nilai}</div><div class="ket">{d}{ket}</div></div>')
 
 
 def grid(kelas, *isi):
