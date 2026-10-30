@@ -291,7 +291,64 @@ Kolom prediksi minimum:
 - `risk_category`
 - `model_name`
 
-## 7. Requirement dashboard
+### 6.5 Clustering wilayah
+
+Clustering digunakan sebagai analisis segmentasi wilayah, bukan sebagai pengganti forecasting. Tujuannya adalah mengelompokkan kabupaten/kota yang memiliki karakteristik kualitas udara serupa sehingga dashboard dapat menunjukkan zona prioritas pemantauan.
+
+Unit analisis clustering adalah satu kabupaten/kota. Data harian diringkas menjadi satu baris per wilayah dengan variabel berikut:
+
+| Variabel clustering | Fungsi |
+|---|---|
+| `rata_rata_pm25` | Tingkat polusi rata-rata |
+| `median_pm25` | Kondisi tengah yang lebih tahan terhadap outlier |
+| `maksimum_pm25` | Nilai PM2.5 tertinggi |
+| `persentase_hari_tinggi` | Frekuensi hari PM2.5 di atas 55 µg/m³ |
+| `jumlah_episode` | Banyaknya episode polusi |
+| `durasi_episode_terpanjang` | Durasi episode polusi terburuk |
+| `standar_deviasi_pm25` | Tingkat variabilitas kualitas udara |
+| `rata_rata_pm10` | Profil partikulat berukuran lebih besar |
+| `rata_rata_nitrogen_dioxide` | Profil polutan terkait aktivitas perkotaan |
+| `rata_rata_carbon_monoxide` | Profil tambahan polusi wilayah |
+
+Kolom identitas seperti `nama_kabkota`, `provinsi`, dan `kode_kabkota` tidak digunakan sebagai fitur numerik clustering. Kolom tersebut digunakan kembali sebagai label hasil.
+
+Metode yang akan dicoba:
+
+1. Standardisasi fitur dengan `StandardScaler`.
+2. K-Means sebagai metode utama karena mudah dijelaskan dan divisualisasikan.
+3. Pengujian beberapa nilai jumlah cluster, misalnya `k = 2` sampai `k = 6`.
+4. Pemilihan jumlah cluster menggunakan Silhouette Score, Elbow Method, dan interpretasi substantif.
+5. Pembuatan profil setiap cluster berdasarkan nilai rata-rata fitur.
+
+Output clustering:
+
+- `data/data_gabungan/clustering_wilayah.csv`
+- kolom `nama_kabkota`, `provinsi`, `cluster`, dan fitur ringkasan
+- model dan scaler clustering di folder `models/`
+
+Cluster diberi nama berdasarkan karakteristik data, misalnya risiko relatif rendah dan stabil, risiko sedang atau musiman, serta risiko tinggi dan persisten. Nama cluster tidak ditentukan hanya dari warna peta.
+
+### 6.6 Klasifikasi kategori risiko
+
+Klasifikasi digunakan sebagai lapisan interpretasi dari nilai PM2.5, baik nilai aktual maupun hasil prediksi. Model utama tetap berupa regresi forecasting karena targetnya adalah angka PM2.5.
+
+Alurnya adalah:
+
+1. Model regresi menghasilkan `predicted_pm2_5`.
+2. Nilai prediksi dipetakan ke ambang risiko.
+3. Hasilnya disimpan sebagai `risk_category`.
+
+| Nilai PM2.5 | Kategori |
+|---:|---|
+| ≤ 15 µg/m³ | Baik (Aman) |
+| > 15 sampai 55 µg/m³ | Sedang (Waspada) |
+| > 55 µg/m³ | Tidak Sehat (Bahaya) |
+
+Klasifikasi risiko digunakan untuk peta dan tabel dashboard, bukan sebagai target utama model terpisah. Model klasifikasi terpisah hanya dipertimbangkan jika evaluasi berbasis kelas diperlukan.
+
+## 7. Requirement dashboard awal
+
+Catatan: rancangan dashboard inti yang berlaku untuk implementasi terbaru dijelaskan pada Bagian 10. Tab cuaca tetap opsional sampai data cuaca berhasil digabungkan.
 
 ### Tab 1 — Ringkasan
 
@@ -373,3 +430,99 @@ Sebelum modeling dianggap selesai:
 - Ambang risiko merupakan kategori operasional untuk dashboard.
 - Prediksi tidak boleh diposisikan sebagai diagnosis medis.
 - Perubahan besar pada November 2024 perlu dievaluasi sebagai episode polusi atau perubahan distribusi data.
+
+## 10. Dashboard inti versi revisi
+
+Dashboard memiliki dua keluaran analitik utama:
+
+1. **Segmentasi wilayah**: peta Pulau Jawa dengan tiga warna cluster berdasarkan karakteristik kualitas udara.
+2. **Prediksi deret waktu**: line chart PM2.5 aktual dibandingkan prediksi model untuk wilayah yang dipilih.
+
+### 10.1 Peta segmentasi wilayah
+
+Peta menampilkan satu warna untuk setiap cluster. Warna hanya berfungsi sebagai pembeda visual; makna cluster ditentukan dari profil statistiknya.
+
+Informasi yang ditampilkan pada tooltip:
+
+- nama kabupaten/kota
+- provinsi
+- cluster
+- rata-rata PM2.5
+- persentase hari di atas ambang risiko
+- durasi episode polusi terpanjang
+
+Legenda peta harus menjelaskan nama cluster, contohnya:
+
+- hijau: risiko relatif rendah dan stabil
+- kuning: risiko sedang atau musiman
+- merah: risiko tinggi dan persisten
+
+### 10.2 Peta prediksi risiko
+
+Peta prediksi merupakan mode tampilan yang berbeda dari peta cluster. Peta ini menggunakan hasil `predicted_pm2_5` untuk hari berikutnya.
+
+Legenda kategori risiko:
+
+- hijau: Baik (Aman)
+- kuning: Sedang (Waspada)
+- merah: Tidak Sehat (Bahaya)
+
+Legenda cluster dan legenda risiko tidak boleh digabung karena keduanya memiliki arti yang berbeda.
+
+### 10.3 Line chart aktual dan prediksi
+
+Line chart menampilkan:
+
+- garis PM2.5 aktual
+- garis PM2.5 prediksi model
+- garis rata-rata bergerak 7 hari
+- garis ambang polusi tinggi pada 55 µg/m³
+
+Sumbu X adalah tanggal dan sumbu Y adalah PM2.5 dalam µg/m³. Grafik dapat difilter berdasarkan kabupaten/kota, provinsi, cluster, model, dan rentang tanggal.
+
+Tambahan informasi pada grafik:
+
+- nilai prediksi hari berikutnya
+- tanggal pembaruan data
+- MAE pada wilayah atau periode yang sedang dipilih
+- selisih aktual dan prediksi
+
+### 10.4 Struktur dashboard inti
+
+#### Tab 1: Ringkasan
+
+- kartu PM2.5 tertinggi hari ini
+- kartu prediksi PM2.5 tertinggi besok
+- kartu jumlah wilayah berisiko tinggi besok
+- kartu jumlah wilayah yang dipantau
+- pilihan tampilan kabupaten/kota atau provinsi
+- toggle peta cluster dan peta prediksi risiko
+- tabel ranking yang dapat dicari dan diurutkan
+
+#### Tab 2: Tren dan Prediksi
+
+- line chart aktual versus prediksi
+- rolling average 7 hari
+- ambang polusi tinggi
+- grafik error prediksi
+- tabel episode polusi tinggi
+- filter wilayah, provinsi, cluster, model, dan tanggal
+
+#### Tab 3: Profil Cluster
+
+- peta tiga warna cluster
+- jumlah wilayah pada setiap cluster
+- karakteristik rata-rata setiap cluster
+- tabel anggota cluster
+- radar chart atau bar chart profil fitur cluster
+
+#### Tab 4: Evaluasi Model
+
+- penjelasan baseline, MAE, RMSE, dan R²
+- tabel perbandingan model
+- grafik perbandingan MAE
+- feature importance
+- grafik aktual versus prediksi
+- keterangan periode training, validasi, dan test
+
+Tab cuaca tetap bersifat opsional sampai dataset cuaca tersedia. Jika data cuaca berhasil digabungkan, analisis cuaca dapat ditambahkan sebagai tab atau subbagian tersendiri.
