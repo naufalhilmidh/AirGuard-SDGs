@@ -402,6 +402,94 @@ Fokus interpretasi:
 
 Dokumen ini akan diperbarui setelah tahap modeling dan evaluasi klasifikasi selesai.
 
+## 16. Alur kerja dan handoff modeling
 
+Alur lengkap proyek klasifikasi risiko PM2.5:
+
+```text
+Dataset kualitas udara
+        ↓
+Pemeriksaan data
+        ↓
+EDA
+        ↓
+Preprocessing
+        ↓
+Feature engineering
+        ↓
+Menentukan target klasifikasi
+        ↓
+Split data berbasis waktu
+        ↓
+HANDOFF KE TAHAP MODELING
+        ↓
+Encoding target
+        ↓
+Penanganan imbalance
+        ↓
+Training model
+        ↓
+Evaluasi model
+        ↓
+Pemilihan model terbaik
+        ↓
+Penyimpanan hasil untuk dashboard
+```
+
+### 16.1 Pekerjaan yang sudah selesai
+
+- Dataset kualitas udara Pulau Jawa berhasil dibaca.
+- Missing value dan duplikasi wilayah-tanggal telah diperiksa.
+- EDA distribusi, korelasi, tren, dan distribusi risiko telah dilakukan.
+- Fitur lag PM2.5 telah tersedia.
+- Fitur rolling PM2.5 telah tersedia.
+- Fitur kalender dibuat pada notebook modeling.
+- Target klasifikasi `kategori_target_pm2_5` telah ditentukan.
+- Fitur dan target telah dipisahkan menjadi `X` dan `y`.
+- Data telah dibagi berdasarkan waktu menjadi train, validation, dan test.
+
+### 16.2 Pembagian data yang digunakan
+
+| Subset | Periode | Fungsi |
+|---|---|---|
+| Train | 2022-08-18 sampai 2024-12-31 | Melatih model |
+| Validation | 2025-01-01 sampai 2025-12-31 | Memilih model dan tuning |
+| Test | 2026-01-01 sampai 2026-10-21 | Evaluasi akhir |
+
+Variabel hasil split yang tersedia:
+
+```python
+X_train, y_train
+X_val, y_val
+X_test, y_test
+```
+
+### 16.3 Pekerjaan yang belum dilakukan
+
+Tahap berikutnya menjadi tanggung jawab modeling:
+
+- Encoding label target.
+- Pemeriksaan distribusi kelas pada setiap subset.
+- Pembuatan baseline.
+- Training model tanpa balancing.
+- Training model dengan class weight.
+- Eksperimen SMOTE hanya pada data train.
+- Feature selection jika diperlukan.
+- Training LightGBM Classifier.
+- Training Extra Trees Classifier.
+- Training HistGradientBoosting Classifier.
+- Evaluasi precision, recall, F1-score, macro F1, balanced accuracy, dan confusion matrix.
+- Pemilihan model terbaik berdasarkan validation.
+- Evaluasi final satu kali pada data test.
+- Penyimpanan prediksi, metrik, dan feature importance untuk dashboard.
+
+### 16.4 Batasan penting untuk tahap modeling
+
+- Jangan menggunakan random train-test split.
+- Jangan menerapkan SMOTE pada validation atau test.
+- Jangan memasukkan `target_pm2_5` atau `kategori_target_pm2_5` ke dalam fitur.
+- Jangan menggunakan informasi dari periode test saat tuning model.
+- Gunakan macro F1 dan recall per kelas, bukan accuracy saja.
+- Perhatikan recall kelas Baik dan Tidak Sehat karena keduanya lebih sedikit dibanding kelas Sedang.
 
 

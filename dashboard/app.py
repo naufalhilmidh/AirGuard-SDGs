@@ -5,8 +5,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from utils import (BATAS_TINGGI, CUACA, KATEGORI, KOTA, PALET_KOTA, PROV_DARI_KOTA, PROVINSI, URUTAN_KATEGORI,
-                   WARNA_KATEGORI, WARNA_PREDIKSI, WARNA_PROVINSI, WARNA_UTAMA, WILAYAH, muat_data, nama_kategori)
+from utils import (BATAS_TINGGI, FAKTOR, KATEGORI, KODE_DARI_KOTA, KODE_DARI_PROV, KOTA, LABEL_ZONA,
+                   PALET_KOTA, PROV_DARI_KOTA, PROVINSI, RAMP_WARNA, URUTAN_ZONA, WARNA_KATEGORI,
+                   WARNA_PREDIKSI, WARNA_PROVINSI, WARNA_UTAMA, WARNA_ZONA, WILAYAH, jalur_peta,
+                   muat_batas, muat_cluster, muat_data, nama_kategori, urai_path, warna_nilai)
 
 st.set_page_config(page_title="AirGuard SDGs", layout="wide")
 
@@ -90,12 +92,13 @@ st.markdown(
     .brand .bs {color: #BFD3BA; font-size: .8rem;}
 
     /* tab: kotak, memenuhi lebar, berubah warna saat aktif */
-    [data-testid="stTabs"] [role="tablist"] {gap: 10px !important; overflow: visible !important; margin-bottom: 1.2rem !important;}
+    [data-testid="stTabs"] [role="tablist"] {gap: 8px !important; overflow: visible !important;
+        margin-bottom: 1.2rem !important; justify-content: flex-start !important;}
     [data-testid="stTabs"] [role="tablist"]::after {display: none !important;}
     [data-testid="stTab"], button[data-baseweb="tab"] {
-        flex: 1 1 0 !important; justify-content: center !important; height: auto !important; margin: 0 !important;
-        padding: .8rem 1rem !important; background: #FBFCF8 !important; border: 1px solid #DDE5D6 !important;
-        border-radius: 12px !important; color: #17302A !important;
+        flex: 0 0 auto !important; justify-content: flex-start !important; height: auto !important; margin: 0 !important;
+        padding: .55rem 1.25rem !important; background: transparent !important; border: 1px solid #DDE5D6 !important;
+        border-radius: 999px !important; color: #17302A !important;
     }
     [data-testid="stTab"] p, button[data-baseweb="tab"] p {font-size: 1rem !important; font-weight: 500 !important; color: #17302A !important;}
     [data-testid="stTab"]:hover, button[data-baseweb="tab"]:hover {background: #E3ECDD !important;}
@@ -106,6 +109,17 @@ st.markdown(
     [data-testid="stTab"] .react-aria-SelectionIndicator, div[data-baseweb="tab-highlight"],
     div[data-baseweb="tab-border"] {display: none !important;}
 
+    /* daftar peringkat berupa batang horizontal, sebagai pengganti tabel penuh */
+    .rlist {display: flex; flex-direction: column; gap: 7px;}
+    .rrow {display: grid; grid-template-columns: 20px minmax(0, 1.4fr) minmax(60px, 1fr) 52px;
+        align-items: center; gap: 8px;}
+    .rrank {font-size: .78rem; font-weight: 600; color: #7A8B80; text-align: right; font-variant-numeric: tabular-nums;}
+    .rname {font-size: .88rem; font-weight: 500; color: #17302A; white-space: nowrap; overflow: hidden;
+        text-overflow: ellipsis;}
+    .rbar {height: 8px; background: #E3E9D9; border-radius: 99px; overflow: hidden;}
+    .rbar > span {display: block; height: 100%; border-radius: 99px;}
+    .rval {font-size: .85rem; font-weight: 600; color: #17302A; text-align: right; font-variant-numeric: tabular-nums;}
+    .rlist .catatan {font-size: .78rem; color: #5E6F65; margin-top: 2px;}
     .stApp h3 {font-size: 1.1rem !important; font-weight: 600 !important; padding: .4rem 0 .1rem !important; color: #17302A;}
     [class*="st-key-card_"] h3 {padding-top: 0 !important;}
 
@@ -136,9 +150,9 @@ st.markdown(
         background-repeat: no-repeat; border-radius: 20px; overflow: hidden;
         box-shadow: 0 1px 2px rgba(23,48,42,.06), 0 10px 28px rgba(23,48,42,.08);
     }
-    .st-key-hero {padding: 48px 52px; min-height: 340px;}
-    .st-key-cta {padding: 36px 52px; min-height: 200px;}
-    .st-key-topbar {padding: 22px 28px; min-height: 130px;}
+    .st-key-hero {padding: 40px 52px 44px;}
+    .st-key-cta {padding: 26px 52px 30px;}
+    .st-key-topbar {padding: 20px 28px;}
     .st-key-hero .eyebrow {font-size: .78rem; font-weight: 600; letter-spacing: .08em; color: #1F6F54 !important;}
     .st-key-hero h1 {font-size: 2.9rem; margin: .4rem 0 .8rem; padding: 0; color: #17302A !important;}
     .st-key-hero .lead {font-size: 1.1rem; line-height: 1.65; max-width: 520px; color: #2B463D !important; margin: 0 0 18px;}
@@ -170,6 +184,17 @@ st.markdown(
     .kat:first-of-type {border-top: none;}
     .dot {width: 12px; height: 12px; border-radius: 50%; flex: none;}
     .kat .rg {margin-left: auto; color: #5A6B66; white-space: nowrap;}
+
+    /* Kursor di atas peta: plotly memakai panah empat arah (cursor-move) / crosshair yang
+       terlihat kasar. Diganti penunjuk biasa supaya konsisten dengan wilayah yang bisa di-hover.
+       Aturan plotly tidak pakai !important, jadi ini menang tanpa mengubah skrip plotly. */
+    [class*="st-key-card_peta"] .js-plotly-plot,
+    [class*="st-key-card_peta"] .js-plotly-plot .plot-container,
+    [class*="st-key-card_peta"] .js-plotly-plot .draglayer,
+    [class*="st-key-card_peta"] .js-plotly-plot .nsewdrag,
+    [class*="st-key-card_peta"] .js-plotly-plot .cursor-move,
+    [class*="st-key-card_peta"] .js-plotly-plot .cursor-crosshair,
+    [class*="st-key-card_peta"] .js-plotly-plot .cursor-default {cursor: pointer !important;}
     </style>
     """,
     unsafe_allow_html=True,
@@ -215,6 +240,10 @@ def intro(teks):
 
 def kotak(nama):
     return st.container(key=f"card_{nama}")
+
+
+KONFIG_PETA = {"displaylogo": False, "scrollZoom": False,
+               "modeBarButtonsToRemove": ["select2d", "lasso2d", "toImage"]}
 
 
 def pakai_tema(fig, tinggi=380):
@@ -306,7 +335,7 @@ def landing():
             '<div class="eyebrow">SDG 3 · SDG 11 · SDG 13</div>'
             '<h1>AirGuard SDGs</h1>'
             '<p class="lead">Prediksi dan pemetaan risiko PM2.5 hari berikutnya untuk kabupaten dan kota di Pulau Jawa. '
-            'Data kualitas udara dan cuaca harian dari Open-Meteo dipakai untuk memprediksi konsentrasi PM2.5 esok hari, '
+            'Data kualitas udara harian dari Open-Meteo dipakai untuk memprediksi konsentrasi PM2.5 esok hari, '
             'lalu ditampilkan dalam bentuk peta, tren, dan kategori risiko.</p>'
             f'<span class="glass">{len(semua_kota)} kabupaten/kota, {len(PROVINSI)} provinsi</span>'
             f'<span class="glass">Data aktual sampai {terakhir:%d %b %Y}</span>'
@@ -346,7 +375,7 @@ def landing():
         kartu("Kota dan permukiman berkelanjutan",
               "Peta dan peringkat kabupaten/kota maupun provinsi menunjukkan wilayah yang paling perlu mendapat perhatian.", chip("SDG 11")),
         kartu("Penanganan perubahan iklim",
-              "Pola polusi dibaca bersama kondisi cuaca untuk memahami kapan polusi meningkat.", chip("SDG 13")),
+              "Pola polusi dibaca bersama musim untuk memahami kapan polusi meningkat.", chip("SDG 13")),
     )
 
     st.subheader("Yang bisa kamu lihat di dashboard")
@@ -354,13 +383,13 @@ def landing():
         "g4",
         kartu("Ringkasan", "Kondisi terbaru, prediksi besok, peta Pulau Jawa, dan peringkat per kabupaten/kota atau provinsi."),
         kartu("Tren & Prediksi", "PM2.5 aktual dibandingkan prediksi, plus daftar episode polusi tinggi."),
-        kartu("Cuaca", "Pola PM2.5 yang berkaitan dengan suhu, kelembapan, hujan, dan angin."),
+        kartu("Faktor Lain", "Pola PM2.5 yang bergerak bersama polutan lain (PM10, NO₂, SO₂, CO, ozon) dan riwayatnya sendiri."),
         kartu("Model", "Seberapa akurat prediksi dibanding tebakan sederhana, dan fitur yang paling dipakai model."),
     )
 
     with st.container(key="cta"):
         st.markdown('<div class="ctaT">Siap melihat datanya?</div>'
-                    '<div class="ctaS">Buka dashboard untuk peta risiko, tren, pengaruh cuaca, dan performa model.</div>',
+                    '<div class="ctaS">Buka dashboard untuk peta risiko, tren, faktor pendamping, dan performa model.</div>',
                     unsafe_allow_html=True)
         st.button("Masuk ke Dashboard →", key="masuk_bawah", on_click=masuk)
     st.caption("Proyek kelompok mata kuliah SDGs, PENS. Sumber data: Open-Meteo.")
@@ -374,9 +403,105 @@ def legenda_kategori():
         baris.append(f'<div class="kat"><span class="dot" style="background:{warna}"></span>'
                      f'<span>{nama}</span><span class="rg">{rentang_teks}</span></div>')
         bawah = batas + 0.1
+    # Peta memakai gradasi di antara ambang ini, jadi legenda menampilkan ramp-nya juga.
+    gradasi = ", ".join(warna for _, warna in RAMP_WARNA)
     return (f'<div class="kartu flat">'
             f'<div class="isi" style="margin-bottom:6px">PM2.5 rata-rata 24 jam (µg/m³), mengikuti ISPU.</div>'
+            f'<div style="height:9px;border-radius:6px;margin-bottom:8px;'
+            f'background:linear-gradient(90deg,{gradasi})"></div>'
             f'{"".join(baris)}</div>')
+
+
+@st.cache_data(show_spinner=False)
+def lapisan_peta(level):
+    """Satu baris per ring (pulau/bagian wilayah): kode, nama, array x, array y.
+
+    Dipakai untuk menggambar peta sebagai Scatter SVG. Tiap ring jadi trace sendiri supaya
+    fill="toself" hanya menutup satu poligon — tidak bergantung pada cara plotly menangani
+    titik pemisah antar pulau dalam satu trace.
+    """
+    data = jalur_peta(level)
+    if data is None:
+        return None
+    hasil = []
+    for kode, nama, d in data["fitur"]:
+        for titik in urai_path(d):
+            hasil.append((kode, nama, [p[0] for p in titik], [p[1] for p in titik]))
+    return hasil
+
+
+def peta_interaktif(level, warna, tips, tinggi=440):
+    """Peta choropleth interaktif tanpa WebGL: satu go.Scatter (fill="toself") per wilayah.
+
+    Trace peta bawaan plotly berbasis WebGL, dan di sebagian perangkat isi poligonnya tidak
+    tergambar sama sekali (yang tampil hanya basemap abu-biru). Scatter memakai SVG biasa:
+    warnanya juga literal per wilayah, jadi tidak mungkin berbeda dari legenda, sementara
+    hover, drag, dan zoom tetap berfungsi.
+    """
+    lapisan = lapisan_peta(level)
+    if not lapisan:
+        return None
+    fig = go.Figure()
+    for kode, nama, xs, ys in lapisan:
+        fig.add_trace(go.Scatter(
+            x=xs, y=ys, mode="lines", fill="toself", fillcolor=warna.get(kode, "#D8D8D8"),
+            line=dict(color="#FFFFFF", width=0.4), hoveron="fills",
+            text=tips.get(kode, nama), hovertemplate="%{text}<extra></extra>",
+            name=nama, showlegend=False,
+            hoverlabel=dict(bgcolor="#FFFFFF", bordercolor="#DCE6E2", align="left",
+                            font=dict(family="IBM Plex Sans, sans-serif", size=12, color="#17302A")),
+        ))
+    fig.update_layout(
+        template="simple_white", height=tinggi, showlegend=False, dragmode="pan",
+        margin=dict(l=2, r=2, t=2, b=2), hovermode="closest",
+        # zoom/geser tetap tersimpan saat tanggal di sidebar diganti; tapi direset saat
+        # pindah kab/kota <-> provinsi karena cakupan petanya berbeda
+        uirevision=f"peta-{level}",
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(visible=False),
+        # skala y dikunci ke x supaya bentuk pulau tidak gepeng saat kotak peta di-zoom
+        yaxis=dict(visible=False, autorange="reversed", scaleanchor="x", scaleratio=1),
+    )
+    return fig
+
+
+def legenda_zona(klaster, u):
+    """Legenda zona cluster: sengaja terpisah dari legenda kategori risiko."""
+    if klaster is None:
+        return ('<div class="kartu flat"><div class="isi">Hasil clustering belum tersedia.'
+                '</div></div>')
+    gab = u[["kode"]].merge(klaster, on="kode", how="left")
+    baris = []
+    for zona in URUTAN_ZONA:
+        sub = gab[gab["zona"] == zona]
+        rerata = f"{sub['rata_rata_pm25'].mean():.0f} µg/m³" if len(sub) else "–"
+        baris.append(f'<div class="kat"><span class="dot" style="background:{WARNA_ZONA[zona]}"></span>'
+                     f'<span>{LABEL_ZONA[zona]}</span>'
+                     f'<span class="rg">{len(sub)} wilayah · {rerata}</span></div>')
+    return ('<div class="kartu flat">'
+            '<div class="isi" style="margin-bottom:6px">K-Means (k=3) atas karakter jangka panjang '
+            'tiap wilayah: rata-rata, median, maksimum, variabilitas, episode, dan polutan lain. '
+            'Warna hanya pembeda zona, bukan tingkat bahaya harian.</div>'
+            f'{"".join(baris)}</div>')
+
+
+def daftar_bar(u, kolom, n=10, kolom_kategori=None, catatan=""):
+    """Peringkat ringkas berupa batang horizontal (HTML), diurutkan dari nilai terbesar."""
+    d = u.nlargest(int(n), kolom)
+    puncak = max(float(d[kolom].max()), 1e-9) if len(d) else 1.0
+    pakai_kategori = bool(kolom_kategori) and kolom_kategori in u.columns
+    baris = []
+    for i, (_, r) in enumerate(d.iterrows(), 1):
+        nilai = float(r[kolom])
+        lebar = max(nilai / puncak * 100, 2)
+        warna = WARNA_KATEGORI.get(str(r[kolom_kategori]), WARNA_UTAMA) if pakai_kategori else WARNA_UTAMA
+        baris.append(
+            f'<div class="rrow"><span class="rrank">{i}</span>'
+            f'<span class="rname">{r["Wilayah"]}</span>'
+            f'<span class="rbar"><span style="width:{lebar:.0f}%;background:{warna}"></span></span>'
+            f'<span class="rval">{nilai:.1f}</span></div>')
+    ekor = f'<div class="catatan">{catatan}</div>' if catatan else ""
+    return f'<div class="rlist">{"".join(baris)}{ekor}</div>'
 
 
 def ringkasan():
@@ -418,6 +543,7 @@ def ringkasan():
         t = tabel.rename(columns={"kota": "Wilayah"})
     t["Perubahan"] = t["Prediksi besok"] - t["PM2.5 hari ini"]
     t["Kategori besok"] = t["Prediksi besok"].map(nama_kategori)
+    t["kode"] = t["Wilayah"].map(KODE_DARI_PROV if per_prov else KODE_DARI_KOTA)
 
     tinggi_h = t.loc[t["PM2.5 hari ini"].idxmax()]
     tinggi_b = t.loc[t["Prediksi besok"].idxmax()]
@@ -436,54 +562,132 @@ def ringkasan():
         stat("Wilayah dipantau", f"{len(tabel)}", f"kabupaten/kota di {tabel['Provinsi'].nunique()} provinsi", "pin", "#D5E8E4"),
     )
 
-    kiri, kanan = st.columns([3, 1.4], gap="large")
+    kiri, kanan = st.columns([2.15, 1], gap="large")
     with kiri:
         with kotak("peta"):
-            st.subheader("Peta risiko besok")
-            st.caption("Setiap titik adalah satu " + ("provinsi (di titik tengah kabupaten/kota-nya)" if per_prov else "kabupaten/kota")
-                       + ". Warnanya menunjukkan kategori risiko dari PM2.5 yang diprediksi untuk besok, "
-                       "bukan kondisi hari ini. Arahkan kursor ke titik untuk melihat angkanya.")
-            hover = {"Prediksi besok": ":.1f", "Kategori besok": True, "lat": False, "lon": False}
-            hover["Berisiko tinggi besok" if per_prov else "Provinsi"] = True
-            fig = px.scatter_map(
-                t, lat="lat", lon="lon", color="Kategori besok", text="Wilayah" if len(t) <= 12 else None,
-                hover_name="Wilayah", hover_data=hover,
-                color_discrete_map=WARNA_KATEGORI, category_orders={"Kategori besok": URUTAN_KATEGORI},
-                zoom=5.2, center={"lat": -7.4, "lon": 109.8}, map_style="carto-positron",
-            )
-            fig.update_traces(marker=dict(size=22 if per_prov else 11), textposition="top center", textfont=dict(size=12))
-            fig.update_layout(height=440, margin=dict(l=0, r=0, t=0, b=0), showlegend=False)
-            st.plotly_chart(fig)
+            # Dua peta yang berbeda tujuan (requirement.md 6.5/6.6): peta risiko menjawab
+            # "berapa nilai PM2.5 besok", peta zona menjawab "wilayah ini karakternya apa".
+            # Zona cluster hanya ada per kabupaten/kota, bukan per provinsi.
+            if per_prov:
+                mode_peta = "Risiko besok"
+            else:
+                mode_peta = st.segmented_control(
+                    "Tampilan peta", ["Risiko besok", "Zona cluster"],
+                    default="Risiko besok", key="mode_peta", label_visibility="collapsed",
+                ) or "Risiko besok"
+            if mode_peta == "Zona cluster":
+                st.subheader("Peta zona cluster")
+                st.caption("Zona hasil K-Means (k=3) atas karakter jangka panjang tiap wilayah, jadi "
+                           "sifatnya tetap: tidak berubah saat tanggal di sidebar diganti. Arahkan "
+                           "kursor ke wilayah untuk melihat karakteristiknya, tarik untuk menggeser, "
+                           "gulir-ganda untuk kembali.")
+            else:
+                st.subheader("Peta risiko besok")
+                st.caption("Warna wilayah mengikuti besar nilai PM2.5 yang diprediksi untuk besok "
+                           "(makin ke merah, makin tinggi). Arahkan kursor ke wilayah untuk melihat "
+                           "angkanya."
+                           + (" Peta zona cluster hanya tersedia pada tampilan kabupaten/kota."
+                              if per_prov else ""))
+            level_peta = "provinsi" if per_prov else "kabkota"
+            batas = muat_batas(level_peta)
+            kolom_info = "Berisiko tinggi besok" if per_prov else "Provinsi"
+            ekor = " wilayah berisiko tinggi" if per_prov else ""
+            if batas is None:
+                st.info("Berkas batas wilayah belum ada. Jalankan sekali dari folder dashboard: "
+                        "`python referensi/buat_batas.py`")
+            elif t["kode"].isna().any():
+                st.warning("Ada wilayah tanpa kode BPS sehingga tidak bisa digambar pada peta.")
+            elif mode_peta == "Zona cluster":
+                klaster = muat_cluster()
+                if klaster is None:
+                    st.info("Hasil clustering belum ada di `data/data_gabungan/clustering_wilayah.csv`. "
+                            "Jalankan notebooks/04_modeling/CLUSTERING.ipynb lebih dulu.")
+                else:
+                    gab = t[["kode", "Wilayah"]].merge(klaster, on="kode", how="left")
+                    hilang = gab.loc[gab["zona"].isna(), "Wilayah"].tolist()
+                    if hilang:
+                        st.warning("Belum punya zona cluster: " + ", ".join(hilang[:5])
+                                   + (f" (+{len(hilang) - 5} lagi)" if len(hilang) > 5 else ""))
+                    warna, tips = {}, {}
+                    for kode, wilayah, zona, rata, persen in zip(
+                            gab["kode"], gab["Wilayah"], gab["zona"],
+                            gab["rata_rata_pm25"], gab["persentase_hari_tinggi"]):
+                        kenal = isinstance(zona, str) and zona in WARNA_ZONA
+                        warna[kode] = WARNA_ZONA[zona] if kenal else "#D8D8D8"
+                        rata_txt = f"{rata:.1f}" if rata == rata else "–"
+                        persen_txt = f"{persen:.1f}" if persen == persen else "–"
+                        tips[kode] = (f"<b>{wilayah}</b><br>Zona "
+                                      f"{LABEL_ZONA[zona] if kenal else 'belum ada data'}"
+                                      f"<br>Rata-rata PM2.5 jangka panjang {rata_txt} µg/m³"
+                                      f"<br>Hari bernilai tinggi {persen_txt}%")
+                    peta = peta_interaktif("kabkota", warna, tips)
+                    if peta:
+                        st.plotly_chart(peta, config=KONFIG_PETA, key="peta_zona")
+            else:
+                # Warna = besar nilai prediksi (gradasi), bukan warna kategori, supaya selisih
+                # kecil antar wilayah tetap terbaca: 92% wilayah memang sekategori "Sedang".
+                # Titik henti warnanya mengikuti ambang ISPU, jadi tetap bermakna.
+                warna, tips = {}, {}
+                for kode, wilayah, besok, hari_ini, kategori, info in zip(
+                        t["kode"], t["Wilayah"], t["Prediksi besok"], t["PM2.5 hari ini"],
+                        t["Kategori besok"], t[kolom_info]):
+                    warna[kode] = warna_nilai(besok)
+                    besok_txt = f"{besok:.1f}" if besok == besok else "–"
+                    hari_txt = f"{hari_ini:.1f}" if hari_ini == hari_ini else "–"
+                    tips[kode] = (f"<b>{wilayah}</b><br>Prediksi besok {besok_txt} µg/m³ "
+                                  f"(hari ini {hari_txt})<br>Kategori {kategori}"
+                                  f"<br>{info}{ekor}")
+                peta = peta_interaktif(level_peta, warna, tips)
+                if peta:
+                    st.plotly_chart(peta, config=KONFIG_PETA, key="peta_risiko")
     with kanan:
+        with kotak("risiko"):
+            st.subheader("5 tertinggi besok")
+            st.caption("Prediksi PM2.5 dalam µg/m³.")
+            st.markdown(daftar_bar(t, "Prediksi besok", 5, kolom_kategori="Kategori besok"),
+                        unsafe_allow_html=True)
         with kotak("legenda"):
-            st.subheader("Keterangan warna")
-            st.markdown(legenda_kategori(), unsafe_allow_html=True)
+            # Legenda mengikuti mode peta: zona cluster dan kategori risiko tidak pernah digabung.
+            if mode_peta == "Zona cluster":
+                st.subheader("Keterangan zona")
+                st.markdown(legenda_zona(muat_cluster(), t), unsafe_allow_html=True)
+                st.caption("Butuh angka harian? Pindah ke mode \"Risiko besok\".")
+            else:
+                st.subheader("Keterangan warna")
+                st.markdown(legenda_kategori(), unsafe_allow_html=True)
+                st.caption("Butuh karakter wilayah? Pindah ke mode \"Zona cluster\".")
 
     with kotak("peringkat"):
         st.subheader("Peringkat " + ("provinsi" if per_prov else "kabupaten/kota"))
         f1, f2, _ = st.columns([1, 1, 2])
-        urut = f1.selectbox("Urutkan berdasarkan", ["Prediksi besok", "PM2.5 hari ini", "Rata-rata periode"])
+        urut = f1.selectbox("Urutkan berdasarkan", ["Prediksi besok", "PM2.5 hari ini", "Rata-rata periode"],
+                            key="urut_peringkat")
         if per_prov:
             jumlah = len(t)
         else:
-            pilihan = f2.selectbox("Tampilkan", ["10 teratas", "20 teratas", "Semua"])
+            pilihan = f2.selectbox("Tampilkan", ["10 teratas", "20 teratas", "Semua"], key="jml_peringkat")
             jumlah = len(t) if pilihan == "Semua" else int(pilihan.split()[0])
         kolom = ["Wilayah", "Jumlah wilayah", "Berisiko tinggi besok"] if per_prov else ["Wilayah", "Provinsi"]
         kolom += ["PM2.5 hari ini", "Prediksi besok", "Perubahan", "Rata-rata periode", "Kategori besok"]
-        tampil = t.sort_values(urut, ascending=False).head(jumlah)[kolom].rename(
+        urutan = t.sort_values(urut, ascending=False)
+        tampil = urutan.head(jumlah)[kolom].rename(
             columns={"Wilayah": "Provinsi" if per_prov else "Kabupaten/kota", "Jumlah wilayah": "Jumlah kab/kota"})
-        st.dataframe(
-            tampil, hide_index=True, height=min(38 * (len(tampil) + 1) + 3, 440),
-            column_config={
-                "PM2.5 hari ini": st.column_config.NumberColumn(format="%.1f"),
-                "Prediksi besok": st.column_config.NumberColumn(format="%.1f"),
-                "Perubahan": st.column_config.NumberColumn(format="%+.1f"),
-                "Rata-rata periode": st.column_config.NumberColumn(format="%.1f"),
-            },
-        )
-        st.caption("Satuan PM2.5: µg/m³. Perubahan = prediksi besok dikurangi PM2.5 hari ini. "
-                   "Rata-rata periode dihitung dari rentang tanggal di sidebar. "
-                   "Tabel bisa dicari lewat ikon kaca pembesar di pojok kanan atas tabel.")
+        st.markdown(
+            daftar_bar(urutan, urut, min(jumlah, 12),
+                      catatan="Batang = " + urut.lower() + ". Peringkat penuh dan unduhan ada di tabel lengkap."),
+            unsafe_allow_html=True)
+        with st.expander("Tabel lengkap (" + str(len(tampil)) + " baris)"):
+            st.dataframe(
+                tampil, hide_index=True, height=min(35 * len(tampil) + 38, 460),
+                column_config={
+                    "PM2.5 hari ini": st.column_config.NumberColumn(format="%.1f"),
+                    "Prediksi besok": st.column_config.NumberColumn(format="%.1f"),
+                    "Perubahan": st.column_config.NumberColumn(format="%+.1f"),
+                    "Rata-rata periode": st.column_config.NumberColumn(format="%.1f"),
+                },
+            )
+            st.caption("Satuan PM2.5: µg/m³. Perubahan = prediksi besok dikurangi PM2.5 hari ini. "
+                       "Rata-rata periode dihitung dari rentang tanggal di sidebar.")
 
 
 def episode(d, ambang):
@@ -534,7 +738,8 @@ def tren():
                                  line=dict(color="#8A9A95", width=1.5, dash="dot")))
         fig.add_trace(go.Scatter(x=[d["tanggal_prediksi"].min(), d["tanggal_prediksi"].max()], y=[ambang, ambang],
                                  name=f"Ambang ({ambang:.1f})", mode="lines",
-                                 line=dict(color="#A23B3B", width=1, dash="longdash")))
+                                 line=dict(color=WARNA_KATEGORI["Sangat tidak sehat"], width=1,
+                                           dash="longdash")))
         fig.update_yaxes(title="PM2.5 (µg/m³)")
         st.plotly_chart(pakai_tema(fig, 380))
 
@@ -565,14 +770,14 @@ def tren():
 
 @st.cache_data(show_spinner=False, max_entries=48)
 def hitung_cuaca(daftar_kota, awal, akhir, grup):
-    """Agregasi berat untuk tab Cuaca. Di-cache per kombinasi filter supaya tidak dihitung ulang."""
+    """Agregasi berat untuk tab Faktor Lain. Di-cache per kombinasi filter supaya tidak dihitung ulang."""
     d = pre[pre["kota"].isin(daftar_kota) & pre["tanggal"].between(awal, akhir)]
-    harian = d.groupby([grup, "tanggal"], as_index=False, observed=True)[["pm2_5", *CUACA]].mean()
+    harian = d.groupby([grup, "tanggal"], as_index=False, observed=True)[["pm2_5", *FAKTOR]].mean()
     korelasi = pd.DataFrame({
-        k: g[list(CUACA)].corrwith(g["pm2_5"]) for k, g in harian.groupby(grup, observed=True)
-    }).T.rename(columns=CUACA)
+        k: g[list(FAKTOR)].corrwith(g["pm2_5"]) for k, g in harian.groupby(grup, observed=True)
+    }).T.rename(columns=FAKTOR)
     bulanan = d.assign(bulan=d["tanggal"].dt.month).groupby(["bulan", grup], as_index=False, observed=True)["pm2_5"].mean()
-    contoh = d.sample(min(len(d), 1500), random_state=0)[["kota", "provinsi", "pm2_5", *CUACA]].copy()
+    contoh = d.sample(min(len(d), 1500), random_state=0)[["kota", "provinsi", "pm2_5", *FAKTOR]].copy()
     contoh["kota"] = contoh["kota"].astype(str)
     contoh["provinsi"] = contoh["provinsi"].astype(str)
     bulanan[grup] = bulanan[grup].astype(str)
@@ -581,9 +786,9 @@ def hitung_cuaca(daftar_kota, awal, akhir, grup):
 
 
 def cuaca():
-    intro("<b>Halaman ini menjawab:</b> apakah PM2.5 cenderung naik atau turun bersamaan dengan kondisi cuaca tertentu, "
-          "seperti suhu, kelembapan, hujan, dan angin? Hubungan yang terlihat adalah <i>pola yang berkaitan</i>, "
-          "bukan bukti sebab-akibat.")
+    intro("<b>Halaman ini menjawab:</b> apakah PM2.5 cenderung naik atau turun bersamaan dengan polutan lain "
+          "seperti PM10, NO₂, SO₂, dan ozon, atau mengikuti riwayatnya sendiri? Hubungan yang terlihat adalah "
+          "<i>pola yang berkaitan</i>, bukan bukti sebab-akibat.")
 
     if len(pilih_kota) <= 12:
         grup_nama = st.radio("Kelompokkan per", ["Provinsi", "Kabupaten/kota"], horizontal=True, key="grup_cuaca")
@@ -595,7 +800,7 @@ def cuaca():
     warna = WARNA_PROVINSI if grup == "provinsi" else dict(zip(sorted(contoh["kota"].unique()), PALET_KOTA * 2))
 
     with kotak("korelasi"):
-        st.subheader("Korelasi PM2.5 dengan variabel cuaca")
+        st.subheader("Korelasi PM2.5 dengan faktor lain")
         st.caption("Angka (r) berkisar dari -1 sampai +1. Mendekati +1 (merah): PM2.5 cenderung naik saat variabel itu naik. "
                    "Mendekati -1 (biru): PM2.5 cenderung turun saat variabel itu naik. "
                    "Mendekati 0: hampir tidak ada pola."
@@ -605,22 +810,21 @@ def cuaca():
         fig.update_xaxes(side="top")
         st.plotly_chart(pakai_tema(fig, 130 + 52 * len(korelasi)))
 
+    var = st.selectbox("Faktor pembanding", list(FAKTOR), format_func=FAKTOR.get)
     kiri, kanan = st.columns(2, gap="large")
     with kiri:
         with kotak("sebar"):
-            st.subheader("PM2.5 dan satu variabel cuaca")
-            st.caption("Setiap titik adalah satu hari di satu kabupaten/kota. Kalau sebaran titik naik ke kanan, PM2.5 cenderung naik "
-                       "bersama variabel yang dipilih. Kalau turun ke kanan, sebaliknya.")
-            var = st.selectbox("Variabel cuaca", list(CUACA), format_func=CUACA.get)
+            st.subheader("PM2.5 dan satu faktor lain")
+            st.caption("Setiap titik adalah satu hari di satu kabupaten/kota. Kalau sebaran titik naik ke kanan, "
+                       "PM2.5 cenderung naik bersama faktor yang dipilih.")
             fig2 = px.scatter(contoh, x=var, y="pm2_5", color=grup, opacity=0.55, color_discrete_map=warna,
-                              labels={var: CUACA[var], "pm2_5": "PM2.5 (µg/m³)", grup: grup_nama})
+                              labels={var: FAKTOR[var], "pm2_5": "PM2.5 (µg/m³)", grup: grup_nama})
             st.plotly_chart(pakai_tema(fig2, 340))
     with kanan:
         with kotak("bulanan"):
             st.subheader("Rata-rata PM2.5 per bulan")
             st.caption("Bulan dengan nilai tinggi menunjukkan musim polusi pada data ini. "
                        "Berguna untuk melihat pola musiman tiap " + grup_nama.lower() + ".")
-            st.markdown("<div style='height:4.6rem'></div>", unsafe_allow_html=True)
             fig3 = px.line(bulanan, x="bulan", y="pm2_5", color=grup, markers=True, color_discrete_map=warna,
                            labels={"bulan": "Bulan", "pm2_5": "PM2.5 (µg/m³)", grup: grup_nama})
             fig3.update_xaxes(tickmode="array", tickvals=list(range(1, 13)),
@@ -717,6 +921,9 @@ if st.session_state.get("halaman", "landing") == "landing":
     landing()
     st.stop()
 
+# Halaman dashboard memakai kontainer lebih lebar supaya tidak ada pita kosong di layar besar.
+st.markdown("<style>.block-container {max-width: min(1560px, 94vw);}</style>", unsafe_allow_html=True)
+
 # --- Dashboard: sidebar ---
 tmin, tmax = tgl_aktual.min().date(), tgl_aktual.max().date()
 st.sidebar.markdown(
@@ -760,7 +967,7 @@ with st.container(key="topbar"):
 # on_change="rerun": hanya tab yang sedang dibuka yang dihitung, jadi masuk dan pindah tab lebih cepat.
 # Hanya tab yang sedang aktif yang dihitung (tab lain dilewati), supaya dashboard terasa ringan.
 tab_ringkasan, tab_tren, tab_cuaca, tab_model = st.tabs(
-    ["Ringkasan", "Tren & Prediksi", "Cuaca", "Model"], key="tab_dash", on_change="rerun")
+    ["Ringkasan", "Tren & Prediksi", "Faktor Lain", "Model"], key="tab_dash", on_change="rerun")
 for tab, fungsi in [(tab_ringkasan, ringkasan), (tab_tren, tren), (tab_cuaca, cuaca), (tab_model, model)]:
     with tab:
         if tab.open:
