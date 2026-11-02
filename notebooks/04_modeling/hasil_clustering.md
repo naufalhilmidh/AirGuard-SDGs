@@ -84,7 +84,19 @@ Melalui algoritma **K-Means Clustering** (dengan $k = 3$), **119 Kabupaten dan K
 
 ---
 
-## 5. Pemanfaatan Hasil untuk Dashboard & Kebijakan (SDGs)
+## 5. Validasi Hasil Menggunakan PCA (Principal Component Analysis)
+
+Untuk memvalidasi dan memvisualisasikan hasil clustering dari 10 indikator ke dalam bentuk grafik 2 dimensi (2D), diterapkan teknik **PCA**:
+
+- **Informasi Data Terjelaskan Sangat Tinggi (93.0%)**:
+  - **PC1 (84.0% variansi)**: Menjadi sumbu utama *"Tingkat Keparahan Polusi Total"*. Ini membuktikan bahwa partikulat ($PM_{2.5}, PM_{10}$) dan gas emisi ($NO_2, CO$) bergerak searah seiring memburuknya kualitas udara.
+  - **PC2 (9.0% variansi)**: Menangkap variasi sekunder berupa dinamika fluktuasi musiman.
+- **Kesimpulan Visualisasi**:
+  Plot 2D PCA menunjukkan bahwa **ketiga cluster terpisah secara sangat tegas dan bersih (*well-separated*)** tanpa ada pola tumpang tindih (*overlapping*), menegaskan bahwa pengelompokan 3 wilayah ini memiliki batas karakteristik yang nyata.
+
+---
+
+## 6. Pemanfaatan Hasil untuk Dashboard & Kebijakan (SDGs)
 
 1. **Visualisasi Dashboard Interaktif AirGuard**:
    - Terapkan sistem warna peringatan (*traffic light*) pada peta wilayah:
