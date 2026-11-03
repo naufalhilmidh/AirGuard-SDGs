@@ -4,6 +4,7 @@ import math
 import re
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -43,20 +44,23 @@ def muat_batas(level: str = "kabkota"):
         return None
     return json.loads(berkas.read_text(encoding="utf-8"))
 
-# Kategori risiko berdasarkan ISPU untuk PM2.5 (rata-rata 24 jam, ug/m3).
-# CATATAN: cek ulang angka ini ke peraturan resminya (Permen LHK No. 14/2020)
-# sebelum dikutip di makalah. Kategori ini adalah aturan visualisasi proyek,
-# bukan klaim medis.
+# Status EWS AirGuard: 3 tingkat berdasarkan PM2.5 harian (ug/m3), batas atas inklusif:
+# Baik <= 15,0 | Sedang 15,1 - 55,0 | Tidak sehat > 55,0. Ini aturan visualisasi proyek
+# (rincian desain), bukan klaim medis. Cek ulang ke peraturan resmi sebelum dikutip di makalah.
 KATEGORI = [
-    (15.5, "Baik", "#2E9E5B"),
-    (55.4, "Sedang", "#E8B93B"),
-    (150.4, "Tidak sehat", "#E0762E"),
-    (250.4, "Sangat tidak sehat", "#C4342A"),
-    (float("inf"), "Berbahaya", "#7C1D18"),
+    (15.0, "Baik", "#2E9E5B"),
+    (55.0, "Sedang", "#E8B93B"),
+    (float("inf"), "Tidak sehat", "#C4342A"),
 ]
 URUTAN_KATEGORI = [k[1] for k in KATEGORI]
 WARNA_KATEGORI = {k[1]: k[2] for k in KATEGORI}
 BATAS_TINGGI = KATEGORI[1][0]  # di atas nilai ini masuk "Tidak sehat"
+BATAS_STATUS = [KATEGORI[0][0], KATEGORI[1][0]]
+
+
+def kode_status(nilai):
+    """0 = Baik, 1 = Sedang, 2 = Tidak sehat. Menerima angka tunggal atau array."""
+    return np.digitize(nilai, BATAS_STATUS, right=True)
 
 WARNA_UTAMA = "#0F5C55"
 WARNA_PREDIKSI = "#D9622B"
@@ -115,7 +119,7 @@ def campur_warna(w1: str, w2: str, t: float) -> str:
 
 
 def warna_nilai(nilai) -> str:
-    """Warna gradasi hijau -> kuning -> oranye -> merah untuk satu nilai PM2.5.
+    """Warna gradasi hijau -> kuning -> merah untuk satu nilai PM2.5.
 
     Dihitung langsung di Python, bukan lewat colorscale plotly: warna dari colorscale terbukti
     bisa melenceng dari legenda, jadi peta memakai warna literal per wilayah seperti ini.
@@ -266,30 +270,157 @@ def _samakan_nama(df: pd.DataFrame):
     return df, tak_cocok
 
 
+# ---------------------------------------------------------------------------
+# Pemuat data
+# ---------------------------------------------------------------------------
+# Urutan sumber (data asli dan data contoh TIDAK PERNAH dicampur):
+#  1. "tim"      : file tim di data/data_gabungan (airguard_predictions.csv dst.)
+#  2. "baseline" : airguard_preprocessed.csv ada, prediksi belum -> prediksi besok = hari ini
+#                  (persistence). Ini BUKAN model tim dan ditandai jelas di dashboard.
+#  3. "contoh"   : data sintetis di dashboard/sample, kalau tidak ada file tim sama sekali.
+KODE_STR = {"kode_kabkota": str, "kode_provinsi": str}
+
+
+def _asli(nama, **kw):
+    p = DATA_DIR / nama
+    return pd.read_csv(p, dtype=KODE_STR, **kw) if p.exists() else None
+
+
+def _contoh(nama, **kw):
+    return pd.read_csv(SAMPLE_DIR / nama, dtype=KODE_STR, **kw)
+
+
+def _kota(df):
+    """Data asli memakai nama_kabkota; dashboard memakai kolom kota."""
+    if "kota" not in df.columns and "nama_kabkota" in df.columns:
+        df = df.rename(columns={"nama_kabkota": "kota"})
+    return df
+
+
+def _baseline(pre: pd.DataFrame) -> pd.DataFrame:
+    """Prediksi persistence: PM2.5 esok hari dianggap sama dengan hari ini.
+
+    Aktual untuk tanggal d+1 diambil dari target_pm2_5 pada tanggal d. Satu baris tambahan
+    per kota (tanggal terakhir + 2 hari) berisi prediksi besok yang belum punya nilai aktual."""
+    d = pre[["kota", "tanggal", "pm2_5", "target_pm2_5"]].sort_values(["kota", "tanggal"])
+    d = d.assign(kota=d["kota"].astype(str))
+    utama = pd.DataFrame({"kota": d["kota"], "tanggal_prediksi": d["tanggal"] + pd.Timedelta(days=1),
+                          "pm2_5_prediksi": d["pm2_5"], "pm2_5_aktual": d["target_pm2_5"]})
+    akhir = d.groupby("kota", as_index=False).tail(1)
+    depan = pd.DataFrame({"kota": akhir["kota"], "tanggal_prediksi": akhir["tanggal"] + pd.Timedelta(days=2),
+                          "pm2_5_prediksi": akhir["target_pm2_5"], "pm2_5_aktual": np.nan})
+    return pd.concat([utama, depan], ignore_index=True)
+
+
 @st.cache_resource(show_spinner="Memuat data...")
 def muat_data():
-    """Baca file output tim. Kalau belum ada, pakai data contoh di dashboard/sample."""
-    memakai_contoh = False
+    """Mengembalikan (pred, pre, metrik, fitur, sumber, tak_cocok).
 
-    def baca(nama, **kw):
-        nonlocal memakai_contoh
-        # Kode wilayah dibaca sebagai teks supaya "32.10" tidak berubah jadi 32.1.
-        kw.setdefault("dtype", {"kode_kabkota": str, "kode_provinsi": str})
-        asli = DATA_DIR / nama
-        if asli.exists():
-            return pd.read_csv(asli, **kw)
-        memakai_contoh = True
-        return pd.read_csv(SAMPLE_DIR / nama, **kw)
+    sumber: "tim", "baseline" atau "contoh". metrik dan fitur None kalau tim belum menyediakannya.
+    """
+    pre = _asli("airguard_preprocessed.csv", parse_dates=["tanggal"])
+    pred = _asli("airguard_predictions.csv", parse_dates=["tanggal_prediksi"])
+    metrik = _asli("model_metrics.csv")
+    fitur = _asli("feature_importance.csv")
 
-    pred = baca("airguard_predictions.csv", parse_dates=["tanggal_prediksi"])
-    pre = baca("airguard_preprocessed.csv", parse_dates=["tanggal"])
-    metrik = baca("model_metrics.csv")
-    fitur = baca("feature_importance.csv")
+    if pre is None and pred is None:
+        sumber = "contoh"
+        pre = _contoh("airguard_preprocessed.csv", parse_dates=["tanggal"])
+        pred = _contoh("airguard_predictions.csv", parse_dates=["tanggal_prediksi"])
+        metrik, fitur = _contoh("model_metrics.csv"), _contoh("feature_importance.csv")
+    else:
+        if pre is None:
+            pre = _contoh("airguard_preprocessed.csv", parse_dates=["tanggal"])
+        sumber = "tim"
 
-    pred, tak1 = _samakan_nama(pred)
-    pre, tak2 = _samakan_nama(pre)
-    # Kolom teks dijadikan kategori supaya filter (isin) dan groupby cepat untuk ratusan ribu baris.
-    for df in (pred, pre):
+    pre, tak2 = _samakan_nama(_kota(pre))
+    if pred is None:
+        sumber, tak1 = "baseline", []
+        pred = _baseline(pre)
+        pred["provinsi"] = pred["kota"].map(PROV_DARI_KOTA)
+    else:
+        pred, tak1 = _samakan_nama(_kota(pred))
+
+    ada = pred["pm2_5_aktual"].notna()
+    pred["st_aktual"] = np.where(ada, kode_status(pred["pm2_5_aktual"].fillna(0)), -1).astype("int8")
+    pred["st_prediksi"] = kode_status(pred["pm2_5_prediksi"]).astype("int8")
+
+    for df in (pred, pre):  # kategori: filter (isin) dan groupby jauh lebih cepat
         df["kota"] = df["kota"].astype("category")
         df["provinsi"] = df["provinsi"].astype("category")
-    return pred, pre, metrik, fitur, memakai_contoh, sorted(set(tak1) | set(tak2))
+    return pred, pre, metrik, fitur, sumber, sorted(set(tak1) | set(tak2))
+
+
+@st.cache_data(show_spinner=False)
+def muat_cluster_rinci():
+    """Hasil clustering lengkap per kab/kota (kolom: kota, provinsi, zona, ringkasan PM2.5) atau None."""
+    k = _asli("clustering_wilayah.csv")
+    if k is None:
+        return None
+    k, _ = _samakan_nama(_kota(k))
+    k["kota"] = k["kota"].astype(str)
+    k["zona"] = k["nama_cluster"].astype(str).str.strip().str.lower()
+    return k.reset_index(drop=True)
+
+
+def profil_unik(pre: pd.DataFrame) -> dict:
+    """Berapa deret PM2.5 yang benar-benar berbeda. Data CAMS beresolusi grid, jadi beberapa
+    kab/kota bertetangga memakai deret yang sama persis."""
+    p = pre.pivot_table(index="tanggal", columns="kota", values="pm2_5", observed=True)
+    unik = p.round(3).T.drop_duplicates().shape[0]
+    return {"n_kota": p.shape[1], "n_unik": int(unik)}
+
+
+# ---------------------------------------------------------------------------
+# Proyeksi jangka panjang
+# ---------------------------------------------------------------------------
+@st.cache_resource(show_spinner="Menyiapkan proyeksi...")
+def muat_proyeksi():
+    """Prakiraan harian sampai akhir tahun depan: (tabel, metode, tanggal_terakhir_data, tahun).
+
+    Kalau tim menyediakan data/data_gabungan/airguard_forecast.csv (kolom: kota, tanggal,
+    pm2_5_prakiraan, opsional batas_bawah dan batas_atas) file itu yang dipakai. Kalau tidak,
+    proyeksi dihitung dari pola musiman riwayat (rata-rata per hari-dalam-tahun per kota),
+    yang BUKAN hasil model machine learning.
+    """
+    pred, pre, *_ = muat_data()
+    akhir = pred.loc[pred["pm2_5_aktual"].notna(), "tanggal_prediksi"].max()
+    tahun = akhir.year + 1
+    tanggal = pd.date_range(akhir + pd.Timedelta(days=1), f"{tahun}-12-31")
+
+    berkas = DATA_DIR / "airguard_forecast.csv"
+    if berkas.exists():
+        f = pd.read_csv(berkas, parse_dates=["tanggal"])
+        f, _ = _samakan_nama(f)
+        f = f[f["tanggal"].isin(tanggal)].copy()
+        if "batas_bawah" not in f:
+            f["batas_bawah"] = np.nan
+        if "batas_atas" not in f:
+            f["batas_atas"] = np.nan
+        f["kota"] = f["kota"].astype(str)
+        return f[["kota", "provinsi", "tanggal", "pm2_5_prakiraan", "batas_bawah", "batas_atas"]], "tim", akhir, tahun
+
+    h = pre[["kota", "tanggal", "pm2_5"]].copy()
+    h["kota"] = h["kota"].astype(str)
+    h["doy"] = h["tanggal"].dt.dayofyear.clip(upper=365)
+    m = h.groupby(["kota", "doy"])["pm2_5"].agg(["mean", "std"]).reset_index()
+    kotas = sorted(m["kota"].unique())
+
+    def halus(kolom):
+        p = m.pivot(index="kota", columns="doy", values=kolom).reindex(index=kotas, columns=range(1, 366))
+        p = p.T.interpolate(limit_direction="both").T
+        arr = np.nan_to_num(p.to_numpy(), nan=float(np.nanmean(p.to_numpy())))
+        ext = np.concatenate([arr[:, -7:], arr, arr[:, :7]], axis=1)  # melingkar: akhir tahun nyambung ke awal
+        return pd.DataFrame(ext.T).rolling(15).mean().to_numpy()[14:].T
+
+    rata, sebar = halus("mean"), halus("std")
+    idx = np.minimum(tanggal.dayofyear.to_numpy(), 365) - 1
+    hat, sd = rata[:, idx], sebar[:, idx]
+    n, T = len(kotas), len(tanggal)
+    f = pd.DataFrame({
+        "kota": np.repeat(kotas, T), "tanggal": np.tile(tanggal.to_numpy(), n),
+        "pm2_5_prakiraan": hat.ravel(),
+        "batas_bawah": np.clip(hat - sd, 0, None).ravel(), "batas_atas": (hat + sd).ravel(),
+    })
+    f["provinsi"] = f["kota"].map(PROV_DARI_KOTA)
+    return f, "musiman", akhir, tahun
