@@ -4,10 +4,24 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from data import (BATAS_BAHAYA, CUACA, EWS, PENDUDUK, PROVINSI, WARNA_PROVINSI, kota_terbesar, muat_data)
+from data import (BATAS_BAHAYA, EWS, PENDUDUK, PROVINSI, WARNA_PROVINSI, faktor_tersedia, kota_terbesar, muat_data,
+                  muat_klaster)
 from ui import BIRU, grid, intro, kepala, kotak, pakai_tema, stat
 
-PRED, PRE, METRIK, FITUR, CONTOH, _ = muat_data()
+PRED, PRE, METRIK, FITUR, SUMBER, _ = muat_data()
+CUACA = faktor_tersedia(PRE.columns)  # cuaca dan polutan lain yang ada di data
+KLASTER = muat_klaster()
+BASELINE = SUMBER == "baseline"
+
+# Evaluasi memakai data uji (holdout) sesuai pembagian waktu tim: latih 2022-2024, validasi 2025, uji sejak 1 Jan 2026.
+# Kalau data uji tidak cukup (misalnya data contoh), seluruh pasangan prediksi-aktual dipakai.
+UJI_MULAI = pd.Timestamp("2026-01-01")
+_ada = PRED[PRED["pm2_5_aktual"].notna()]
+EVAL = _ada[_ada["tanggal_prediksi"] >= UJI_MULAI]
+if len(EVAL) < 1000:
+    EVAL, LABEL_UJI = _ada, "seluruh periode"
+else:
+    LABEL_UJI = f"{EVAL['tanggal_prediksi'].min():%d %b %Y} sampai {EVAL['tanggal_prediksi'].max():%d %b %Y}"
 SEMUA = "Semua provinsi"
 BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober",
          "November", "Desember"]
@@ -24,7 +38,7 @@ LABEL_FITUR = {
 @st.cache_data(show_spinner=False, max_entries=16)
 def evaluasi(prov):
     """Metrik regresi, pembanding persistence, galat per bulan, dan matriks konfusi status EWS."""
-    d = PRED[PRED["pm2_5_aktual"].notna()]
+    d = EVAL
     if prov != SEMUA:
         d = d[d["provinsi"] == prov]
     d = d.sort_values(["kota", "tanggal_prediksi"])
@@ -57,8 +71,16 @@ def evaluasi(prov):
 
 
 @st.cache_resource
+def profil_unik():
+    """Jumlah deret waktu PM2.5 yang benar-benar berbeda. Wilayah yang berdekatan sering jatuh pada sel grid sumber
+    data yang sama sehingga nilainya identik."""
+    p = PRE.assign(kota=PRE["kota"].astype(str)).pivot_table(index="tanggal", columns="kota", values="pm2_5")
+    return int(p.T.round(3).drop_duplicates().shape[0]), int(p.shape[1])
+
+
+@st.cache_resource
 def galat_provinsi():
-    d = PRED[PRED["pm2_5_aktual"].notna()]
+    d = EVAL
     e = d["pm2_5_prediksi"] - d["pm2_5_aktual"]
     t = pd.DataFrame({"provinsi": d["provinsi"].astype(str).to_numpy(), "ae": np.abs(e.to_numpy()), "e": e.to_numpy()})
     g = t.groupby("provinsi").agg(MAE=("ae", "mean"), Bias=("e", "mean"), n=("ae", "size")).reset_index()
@@ -67,7 +89,7 @@ def galat_provinsi():
 
 @st.cache_data(show_spinner=False, max_entries=16)
 def contoh_scatter(prov):
-    d = PRED[PRED["pm2_5_aktual"].notna()]
+    d = EVAL
     if prov != SEMUA:
         d = d[d["provinsi"] == prov]
     s = d.sample(min(len(d), 1500), random_state=0)[["provinsi", "pm2_5_aktual", "pm2_5_prediksi"]].copy()
@@ -105,7 +127,10 @@ def temuan(ev, prov):
     else:
         bias_teks = f"Bias {ev['bias']:+.1f}: rata-rata prediksi cenderung {'terlalu tinggi' if ev['bias'] > 0 else 'terlalu rendah'}."
     t.append(f"Prediksi rata-rata meleset <b>{ev['mae']:.1f} µg/m³</b> (RMSE {ev['rmse']:.1f}, R² {ev['r2']:.2f}). {bias_teks}")
-    if not np.isnan(ev["skill"]):
+    if BASELINE:
+        t.append("Prediksi yang dievaluasi adalah <b>baseline persistence</b> (besok = hari ini), bukan model tim. "
+                 "Angka ini batas bawah yang harus dikalahkan model.")
+    elif not np.isnan(ev["skill"]):
         if ev["skill"] > 0:
             t.append(f"Dibanding tebakan sederhana <i>persistence</i> (besok = hari ini, MAE {ev['mae_pers']:.1f}), "
                      f"galat model <b>{ev['skill'] * 100:.0f}% lebih rendah</b>.")
@@ -125,15 +150,16 @@ def temuan(ev, prov):
     if cm[2].sum() > 0:
         rec = cm[2, 2] / cm[2].sum() * 100
         prec = cm[2, 2] / cm[:, 2].sum() * 100 if cm[:, 2].sum() else 0
-        t.append(f"Dari <b>{int(cm[2].sum())}</b> hari berstatus Tidak sehat, model berhasil memperingatkan <b>{rec:.0f}%</b> "
+        n_ts = f"{int(cm[2].sum()):,}".replace(",", ".")
+        t.append(f"Dari <b>{n_ts}</b> hari berstatus Tidak sehat, model berhasil memperingatkan <b>{rec:.0f}%</b> "
                  f"(precision {prec:.0f}%).")
     else:
         t.append("Tidak ada hari berstatus Tidak sehat pada data evaluasi, sehingga kemampuan peringatan dini untuk status "
                  "tertinggi belum bisa diuji.")
-    kor = korelasi_gabungan(prov).dropna()
+    kor = korelasi_gabungan(prov).dropna() if CUACA else pd.Series(dtype=float)
     if len(kor):
         k = kor.abs().idxmax()
-        t.append(f"Variabel cuaca dengan hubungan terkuat terhadap PM2.5: <b>{CUACA[k]}</b> (r = {kor[k]:+.2f}). "
+        t.append(f"Faktor dengan hubungan terkuat terhadap PM2.5: <b>{CUACA[k]}</b> (r = {kor[k]:+.2f}). "
                  "Ini pola yang berkaitan, bukan bukti sebab-akibat.")
     return t
 
@@ -166,19 +192,37 @@ def tab_evaluasi(prov):
             "Untuk peringatan dini, recall status Tidak sehat paling penting.\n"
             "- **Precision status**: dari semua hari yang diprediksi berstatus tertentu, berapa persen yang benar."
         )
-    if not np.isnan(ev["skill"]):
+    if not np.isnan(ev["skill"]) and not BASELINE:
         dm = (f"{abs(ev['skill']) * 100:.0f}% {'lebih baik' if ev['skill'] > 0 else 'lebih buruk'}", "baik" if ev["skill"] > 0 else "buruk")
     else:
         dm = None
     grid(
         "g4",
-        stat("MAE", f"{ev['mae']:.2f}", f"vs persistence {ev['mae_pers']:.2f}" if not np.isnan(ev["mae_pers"]) else "µg/m³", "target",
+        stat("MAE", f"{ev['mae']:.2f}", f"vs persistence {ev['mae_pers']:.2f}" if not np.isnan(ev["mae_pers"]) and not BASELINE else "µg/m³", "target",
              gelap=True, delta=dm),
         stat("RMSE", f"{ev['rmse']:.2f}", "µg/m³, lebih menghukum galat besar", "grafik"),
         stat("R²", f"{ev['r2']:.3f}", "makin dekat 1 makin baik", "tren"),
         stat("Bias", f"{ev['bias']:+.2f}", "µg/m³, positif = terlalu tinggi", "awas"),
     )
-    st.caption(f"Dihitung dari {ev['n']:,} pasangan prediksi dan nilai aktual di file prediksi".replace(",", "."))
+    st.caption(f"Dihitung dari {ev['n']:,} pasangan prediksi dan nilai aktual pada data uji ({LABEL_UJI}).".replace(",", "."))
+
+    # metrik status (3 kelas): relevan walau tim hanya mengirim kategori prediksi
+    cm = ev["cm"]
+    benar = np.diag(cm).astype(float)
+    rec_k = np.divide(benar, cm.sum(axis=1), out=np.full(3, np.nan), where=cm.sum(axis=1) > 0)
+    pre_k = np.divide(benar, cm.sum(axis=0), out=np.full(3, np.nan), where=cm.sum(axis=0) > 0)
+    f1_k = 2 * pre_k * rec_k / (pre_k + rec_k)
+    st.subheader("Metrik status (3 kelas)")
+    st.caption("Status adalah keluaran yang dilihat pengguna EWS, jadi akurasinya dinilai terpisah dari galat PM2.5. "
+               "Macro F1 adalah rata-rata F1 ketiga status, sehingga status yang jarang muncul tetap diperhitungkan.")
+    fmt = lambda v: "–" if np.isnan(v) else f"{v * 100:.1f}%"
+    grid(
+        "g4",
+        stat("Akurasi status", f"{benar.sum() / cm.sum() * 100:.1f}%", "hari dengan status tepat", "target"),
+        stat("Macro F1", "–" if np.isnan(f1_k).all() else f"{np.nanmean(f1_k):.3f}", "rata-rata F1 tiga status", "grafik"),
+        stat("Recall Tidak sehat", fmt(rec_k[2]), "dari hari Tidak sehat yang terdeteksi", "awas"),
+        stat("Precision Tidak sehat", fmt(pre_k[2]), "dari peringatan yang benar", "tren"),
+    )
 
     kiri, kanan = st.columns(2, gap="large")
     with kiri:
@@ -265,6 +309,10 @@ def tab_evaluasi(prov):
                         "mudah terlihat bagus pada akurasi, jadi baca recall dan precision tiap status. "
                         "Tanda – berarti status itu tidak pernah muncul.</div>", unsafe_allow_html=True)
 
+    if METRIK is None or FITUR is None:
+        st.info("Perbandingan model dan feature importance akan muncul di sini setelah tim menaruh model_metrics.csv dan "
+                "feature_importance.csv di data/data_gabungan.")
+        return
     kiri, kanan = st.columns(2, gap="large")
     with kiri:
         with kotak("metrik_tim"):
@@ -310,6 +358,7 @@ def tab_tren(prov):
     ambang = f2.number_input("Ambang polusi tinggi (µg/m³)", value=float(BATAS_BAHAYA), step=1.0, format="%.1f", key="an_ambang",
                              help="Bawaan: batas status Tidak sehat.")
     d = d.sort_values("tanggal_prediksi").copy()
+    d["error"] = d["pm2_5_prediksi"] - d["pm2_5_aktual"]
     d["Rata-rata 7 hari"] = d["pm2_5_aktual"].rolling(7, min_periods=1).mean()
 
     with kotak("tren"):
@@ -349,20 +398,20 @@ def tab_tren(prov):
                 st.dataframe(ep, hide_index=True, height=300, column_config={"Puncak": st.column_config.NumberColumn(format="%.1f")})
 
 
-# ====================== tab 3: cuaca dan musim ======================
+# ====================== tab 3: faktor dan musim ======================
 @st.fragment
 def tab_cuaca(prov):
     grup = "provinsi" if prov == SEMUA else "kota"
     grup_nama = "Provinsi" if grup == "provinsi" else "Kabupaten/kota"
     korelasi, bulanan, contoh = hitung_cuaca(prov, grup)
     warna = WARNA_PROVINSI if grup == "provinsi" else None
-    intro("<b>Pertanyaan:</b> apakah PM2.5 cenderung naik atau turun bersamaan dengan kondisi cuaca tertentu? "
+    intro("<b>Pertanyaan:</b> apakah PM2.5 cenderung naik atau turun bersamaan dengan faktor lain (cuaca atau polutan lain)? "
           "Yang terlihat adalah <i>pola yang berkaitan</i>, bukan bukti sebab-akibat."
           + ("" if grup == "provinsi" else " Karena satu provinsi dipilih, baris adalah 15 kabupaten/kota berpenduduk terbanyak."))
 
     with kotak("korelasi"):
-        st.subheader("Korelasi PM2.5 dengan variabel cuaca")
-        st.caption("Angka (r) dari -1 sampai +1. Merah: PM2.5 cenderung naik saat variabel itu naik. Biru: cenderung turun. "
+        st.subheader("Korelasi PM2.5 dengan faktor lain")
+        st.caption("Angka (r) dari -1 sampai +1. Merah: PM2.5 cenderung naik saat faktor itu naik. Biru: cenderung turun. "
                    "Mendekati 0: hampir tidak ada pola." + (" Tiap baris memakai rata-rata harian semua kabupaten/kota di provinsi itu." if grup == "provinsi" else ""))
         fig = px.imshow(korelasi, text_auto=".2f", color_continuous_scale="RdBu_r", zmin=-1, zmax=1, aspect="auto")
         fig.update_layout(coloraxis_colorbar=dict(title="r", thickness=12))
@@ -372,10 +421,10 @@ def tab_cuaca(prov):
     kiri, kanan = st.columns(2, gap="large")
     with kiri:
         with kotak("sebar_cuaca"):
-            st.subheader("PM2.5 dan satu variabel cuaca")
+            st.subheader("PM2.5 dan satu faktor")
             st.caption("Satu titik adalah satu hari di satu kabupaten/kota. Sebaran naik ke kanan berarti PM2.5 cenderung naik "
-                       "bersama variabel itu.")
-            var = st.selectbox("Variabel cuaca", list(CUACA), format_func=CUACA.get, key="an_var")
+                       "bersama faktor itu.")
+            var = st.selectbox("Faktor", list(CUACA), format_func=CUACA.get, key="an_var")
             fig2 = px.scatter(contoh, x=var, y="pm2_5", color=grup, opacity=0.55, color_discrete_map=warna,
                               labels={var: CUACA[var], "pm2_5": "PM2.5 (µg/m³)", grup: grup_nama})
             st.plotly_chart(pakai_tema(fig2, 340))
@@ -390,12 +439,66 @@ def tab_cuaca(prov):
             st.plotly_chart(pakai_tema(fig3, 340))
 
 
+# ====================== tab 4: klaster wilayah ======================
+WARNA_KLASTER = {"rendah-stabil": "#10B981", "sedang-musiman": "#F59E0B", "tinggi-persisten": "#EF4444"}
+URUT_KLASTER = list(WARNA_KLASTER)
+
+
+@st.fragment
+def tab_klaster(prov):
+    k = KLASTER if prov == SEMUA else KLASTER[KLASTER["provinsi"] == prov]
+    intro("<b>Pertanyaan:</b> daerah mana yang punya pola polusi serupa? Tim mengelompokkan kabupaten/kota dengan K-Means "
+          "dari rata-rata PM2.5, persentase hari tinggi, jumlah dan lamanya episode. Nama klaster ditentukan tim.")
+    ringkas = (k.groupby("nama_cluster").agg(Wilayah=("kota", "size"), Rata=("rata_rata_pm25", "mean"),
+                                             Hari=("persentase_hari_tinggi", "mean"), Episode=("jumlah_episode", "mean"))
+               .reindex(URUT_KLASTER).dropna(how="all"))
+    kartu = []
+    for nama, r in ringkas.iterrows():
+        kartu.append(stat(nama.capitalize(), f"{int(r['Wilayah'])} wilayah",
+                          f"rata-rata {r['Rata']:.1f} µg/m³, {r['Hari']:.0f}% hari tinggi", "pin", warna=WARNA_KLASTER[nama]))
+    grid("g3", *kartu)
+    n_unik, n_semua = profil_unik()
+    if n_unik < n_semua:
+        st.markdown(f'<div class="catatan" style="margin:-4px 0 12px">Catatan data: dari {n_semua} wilayah hanya ada {n_unik} deret PM2.5 yang '
+                    "berbeda. Wilayah yang berdekatan (misalnya Jakarta Selatan, Jakarta Timur, Depok, dan Bekasi) jatuh pada sel grid "
+                    "sumber data yang sama, sehingga nilainya identik dan sering masuk klaster yang sama.</div>", unsafe_allow_html=True)
+
+    kiri, kanan = st.columns(2, gap="large")
+    with kiri:
+        with kotak("klaster_sebar"):
+            st.subheader("Rata-rata PM2.5 dan hari tinggi")
+            st.caption("Satu titik satu kabupaten/kota. Ke kanan atas berarti rata-rata tinggi dan sering melewati ambang.")
+            fig = px.scatter(k, x="rata_rata_pm25", y="persentase_hari_tinggi", color="nama_cluster", hover_name="nama",
+                             color_discrete_map=WARNA_KLASTER, category_orders={"nama_cluster": URUT_KLASTER},
+                             labels={"rata_rata_pm25": "Rata-rata PM2.5 (µg/m³)", "persentase_hari_tinggi": "Hari tinggi (%)",
+                                     "nama_cluster": "Klaster"})
+            st.plotly_chart(pakai_tema(fig, 380))
+    with kanan:
+        with kotak("klaster_prov"):
+            st.subheader("Klaster per provinsi")
+            st.caption("Jumlah kabupaten/kota di tiap klaster.")
+            p = k.groupby(["provinsi", "nama_cluster"], as_index=False).size()
+            fig2 = px.bar(p, x="size", y="provinsi", color="nama_cluster", orientation="h", color_discrete_map=WARNA_KLASTER,
+                          category_orders={"nama_cluster": URUT_KLASTER}, labels={"size": "Wilayah", "provinsi": "", "nama_cluster": "Klaster"})
+            st.plotly_chart(pakai_tema(fig2, 380))
+    with kotak("klaster_tabel"):
+        st.subheader("Daftar wilayah")
+        t = k.sort_values("rata_rata_pm25", ascending=False)[["kota", "provinsi", "nama_cluster", "rata_rata_pm25",
+                                                               "persentase_hari_tinggi", "jumlah_episode", "durasi_episode_terpanjang"]]
+        st.dataframe(t, hide_index=True, height=360, column_config={
+            "kota": "Kabupaten/kota", "provinsi": "Provinsi", "nama_cluster": "Klaster",
+            "rata_rata_pm25": st.column_config.NumberColumn("Rata-rata PM2.5", format="%.1f"),
+            "persentase_hari_tinggi": st.column_config.NumberColumn("Hari tinggi (%)", format="%.1f"),
+            "jumlah_episode": "Jumlah episode", "durasi_episode_terpanjang": "Episode terpanjang (hari)"})
+
+
 # ====================== halaman ======================
 ev0 = evaluasi(SEMUA)
 kepala(
     "Analitik dan evaluasi",
     "Untuk dosen dan tim peneliti: seberapa akurat model, di mana ia lemah, dan pola apa yang terlihat di data.",
-    ([f"Sumber: data contoh (sintetis)"] if CONTOH else ["Sumber: file hasil tim"]) + [f"{ev0['n']:,} data evaluasi".replace(",", ".")],
+    ({"contoh": ["Sumber: data contoh (sintetis)"], "baseline": ["Data asli", "Prediksi: baseline persistence"],
+      "tim": ["Sumber: file hasil tim"]}[SUMBER]) + [f"Data uji: {LABEL_UJI}", f"{ev0['n']:,} pasangan".replace(",", ".")],
 )
 c1, _ = st.columns([1, 3])
 prov = c1.selectbox("Cakupan analisis", [SEMUA, *PROVINSI], key="an_prov")
@@ -406,7 +509,9 @@ with kotak("temuan"):
     st.caption("Ringkasan yang dihitung otomatis dari data untuk cakupan yang dipilih. Perlu dicek dan ditafsirkan oleh peneliti.")
     st.markdown('<ul class="rek">' + "".join(f"<li>{x}</li>" for x in temuan(ev, prov)) + "</ul>", unsafe_allow_html=True)
 
-t1, t2, t3 = st.tabs(["Evaluasi model", "Tren & episode", "Cuaca & musim"], key="tab_analitik", on_change="rerun")
+nama_tab = ["Evaluasi model", "Tren & episode", "Faktor & musim"] + (["Klaster wilayah"] if KLASTER is not None else [])
+tabs = st.tabs(nama_tab, key="tab_analitik", on_change="rerun")
+t1, t2, t3 = tabs[:3]
 with t1:
     if t1.open:
         tab_evaluasi(prov)
@@ -415,4 +520,8 @@ with t2:
         tab_tren(prov)
 with t3:
     if t3.open:
-        tab_cuaca(prov)
+        tab_cuaca(prov) if CUACA else st.info("Data belum memuat faktor lain untuk dikorelasikan.")
+if KLASTER is not None:
+    with tabs[3]:
+        if tabs[3].open:
+            tab_klaster(prov)

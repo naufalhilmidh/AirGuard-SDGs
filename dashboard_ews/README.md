@@ -154,3 +154,31 @@ dashboard_ews/
 - Ambang status (15 dan 55 µg/m³) mengikuti rincian proyek dan perlu diverifikasi ke regulasi.
 - Rekomendasi di dashboard adalah ringkasan umum berdasarkan status PM2.5 dan bukan saran medis.
 - Saat dideploy ke Streamlit Cloud, tema warna dibaca dari `.streamlit/config.toml` di akar repo, sehingga bisa berbeda dari tema di folder `dashboard_ews`. Warna widget sudah dikunci lewat CSS agar tampilannya tetap biru.
+
+## Mode data (diperbarui setelah data asli masuk)
+
+Dashboard memilih sumber data sendiri, dan data asli tidak pernah dicampur dengan data contoh:
+
+| Kondisi di `data/data_gabungan` | Mode | Yang tampil |
+|---|---|---|
+| Tidak ada file tim | contoh | Semua angka sintetis dari `dashboard/sample` |
+| Ada `airguard_preprocessed.csv`, belum ada `airguard_predictions.csv` | baseline | Data asli. Prediksi besok sementara memakai **baseline persistence** (besok = hari ini), bukan model tim. Ditandai di sidebar dan halaman Analitik |
+| Ada `airguard_predictions.csv` | tim | Prediksi dari file tim. `model_metrics.csv` dan `feature_importance.csv` bersifat opsional |
+
+Hal lain yang berubah:
+- File asli memakai kolom `nama_kabkota` dan `kode_kabkota`; dashboard mencocokkan lewat kode wilayah.
+- Data asli tidak punya kolom cuaca. Tab **Faktor & musim** memakai polutan lain (PM10, CO, NO2, SO2, ozon), dan memakai cuaca otomatis kalau kolomnya ada.
+- Tab **Klaster wilayah** muncul kalau `clustering_wilayah.csv` ada.
+- Proyeksi musiman dihitung dari seluruh riwayat data asli (Agustus 2022 sampai sekarang).
+- Evaluasi masih berbentuk regresi (MAE, RMSE, R2) dan matriks konfusi 3 status. Kalau tim hanya mengirim kategori tanpa nilai PM2.5, format file prediksi perlu disepakati dulu.
+
+## Peta di halaman EWS
+
+Peta memakai batas kabupaten/kota dari `referensi/batas_kabkota_jawa.geojson` (berkas yang sama dengan peta dashboard pertama, dibuat Randi). Dua tampilan: **Status besok** (warna tiga status, garis biru tebal menandai daerah pada kartu detail) dan **Zona klaster** (muncul bila `clustering_wilayah.csv` ada). Saat filter provinsi dipilih, peta otomatis memperbesar provinsi itu. Kodenya ada di `peta.py`.
+
+## Evaluasi dan catatan data (diperbarui 3 November)
+
+- **Data uji:** evaluasi di halaman Analitik hanya memakai periode uji sesuai pembagian waktu tim (latih 2022 sampai 2024, validasi 2025, uji sejak 1 Januari 2026). Kalau data uji kurang dari 1.000 baris (misalnya data contoh), seluruh periode dipakai.
+- **Metrik status:** selain MAE, RMSE, R2, dan bias, ada akurasi status, Macro F1, serta recall dan precision status Tidak sehat. Metrik ini tetap relevan kalau tim hanya mengirim kategori prediksi.
+- **63 deret unik:** dari 119 wilayah hanya ada 63 deret PM2.5 yang berbeda, karena resolusi grid sumber data (sekitar 11 sampai 28 km). Wilayah berdekatan seperti Jakarta Selatan, Jakarta Timur, Depok, dan Bekasi bernilai identik. Catatan ini muncul di tab Klaster wilayah.
+- **Ambang status:** dashboard memakai 15 dan 55 µg/m3 (sesuai `hasil_klasifikasi.md`). Dokumen karakteristik dataset dan dashboard pertama memakai 15,5 dan 55,4 (ISPU). Tim perlu menyepakati satu.

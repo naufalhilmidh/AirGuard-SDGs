@@ -3,10 +3,12 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from data import EWS, PROVINSI, kode_status, kota_terbesar, tabel_besok
+import peta
+from data import EWS, PROVINSI, kode_status, kota_terbesar, muat_klaster, tabel_besok
 from ui import BIRU, grid, intro, kepala, kotak, pakai_tema, pill, stat
 
 TB, AKHIR, BESOK = tabel_besok()
+WARNA_KLASTER = {"rendah-stabil": "#10B981", "sedang-musiman": "#F59E0B", "tinggi-persisten": "#EF4444"}
 
 REKOMENDASI = {
     0: ["Aktivitas di luar ruangan aman dilakukan.",
@@ -24,11 +26,6 @@ def ventilasi(kmh):
     if np.isnan(kmh):
         return "tidak ada data"
     return "lemah" if kmh < 7.2 else ("sedang" if kmh < 14.4 else "baik")
-
-
-def zoom_peta(t):
-    span = max(t["lon"].max() - t["lon"].min(), (t["lat"].max() - t["lat"].min()) * 1.2, 0.3)
-    return float(np.clip(8.55 - np.log2(span), 5.0, 10.5))
 
 
 kepala(
@@ -83,30 +80,46 @@ def badan():
         for r in utama.itertuples()])
 
     # ---- peta + kartu detail ----
+    sel = t[t["kota"] == kota]
     kiri, kanan = st.columns([1.5, 1], gap="large")
     with kiri:
         with kotak("peta"):
-            st.subheader("Peta risiko besok")
-            st.caption("Setiap titik adalah satu kabupaten/kota, diwarnai menurut status prediksi besok. "
-                       "Lingkaran biru menandai daerah yang dipilih untuk kartu detail.")
-            fig = go.Figure()
-            sel = t[t["kota"] == kota]
-            fig.add_trace(go.Scattermap(lat=sel["lat"], lon=sel["lon"], mode="markers", showlegend=False, hoverinfo="skip",
-                                        marker=dict(size=26, color=BIRU, opacity=0.35)))
-            for s in EWS:
-                x = t[t["status"] == s["kode"]]
-                fig.add_trace(go.Scattermap(
-                    lat=x["lat"], lon=x["lon"], mode="markers", name=f'{s["nama"]} ({s["sebutan"]})',
-                    marker=dict(size=12 if prov == "Semua provinsi" else 15, color=s["warna"]),
-                    text=x["nama"], customdata=np.c_[x["pm_besok"], x["provinsi"]],
-                    hovertemplate="<b>%{text}</b><br>%{customdata[1]}<br>Prediksi besok: %{customdata[0]:.1f} µg/m³<extra></extra>"))
-            fig.update_layout(
-                height=460, margin=dict(l=0, r=0, t=0, b=0),
-                map=dict(style="carto-positron", center=dict(lat=float(t["lat"].mean()), lon=float(t["lon"].mean())),
-                         zoom=zoom_peta(t)),
-                legend=dict(orientation="h", y=0.03, yanchor="bottom", x=0.01, bgcolor="rgba(255,255,255,.85)"),
-                font=dict(family="Inter, sans-serif", size=12))
-            st.plotly_chart(fig)
+            klaster = muat_klaster()
+            mode = "Status besok"
+            if peta.tersedia() and klaster is not None:
+                mode = st.segmented_control("Tampilan peta", ["Status besok", "Zona klaster"], default="Status besok",
+                                            key="mode_peta", label_visibility="collapsed") or "Status besok"
+            if not peta.tersedia():
+                st.subheader("Peta risiko besok")
+                st.info("Berkas batas wilayah referensi/batas_kabkota_jawa.geojson belum ada.")
+            else:
+                warna, tips = {}, {}
+                if mode == "Zona klaster":
+                    st.subheader("Peta zona klaster")
+                    st.caption("Zona jangka panjang hasil K-Means tim, jadi tidak berubah dari hari ke hari. "
+                               "Warna ini pembeda karakter wilayah, bukan tingkat bahaya harian.")
+                    zona = klaster.set_index("kota")
+                    for r in t.itertuples():
+                        if r.kota in zona.index:
+                            z = zona.loc[r.kota]
+                            warna[r.kode_kabkota] = WARNA_KLASTER[z["nama_cluster"]]
+                            tips[r.kode_kabkota] = (f"<b>{r.kota}</b><br>Zona {z['nama_cluster']}<br>Rata-rata PM2.5 jangka panjang "
+                                                    f"{z['rata_rata_pm25']:.1f} µg/m³<br>Hari tinggi {z['persentase_hari_tinggi']:.1f}%")
+                    legenda = "".join(f'<span class="pill" style="background:{w};color:#fff">{n}</span>' for n, w in WARNA_KLASTER.items())
+                else:
+                    st.subheader("Peta risiko besok")
+                    st.caption("Setiap wilayah diwarnai menurut status prediksi besok. Arahkan kursor untuk melihat angkanya, "
+                               "tarik untuk menggeser, gulir ganda untuk kembali. Garis biru tebal menandai daerah pada kartu detail.")
+                    for r in t.itertuples():
+                        st_ = EWS[r.status]
+                        warna[r.kode_kabkota] = st_["warna"]
+                        tips[r.kode_kabkota] = (f"<b>{r.kota}</b><br>{r.provinsi}<br>Prediksi besok {r.pm_besok:.1f} µg/m³ "
+                                                f"(hari ini {r.pm_ini:.1f})<br>Status {st_['nama']} ({st_['sebutan']})")
+                    legenda = "".join(f'<span class="pill" style="background:{x["warna"]};color:{x["teks"]}">{x["nama"]} ({x["sebutan"]})</span>' for x in EWS)
+                st.markdown(f'<div style="display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 8px">{legenda}</div>', unsafe_allow_html=True)
+                st.plotly_chart(peta.gambar(warna, tips, pilih=sel.iloc[0]["kode_kabkota"],
+                                            batas=None if prov == "Semua provinsi" else set(t["kode_kabkota"]),
+                                            kunci=f"peta-{prov}"), config=peta.KONFIG_PETA, key="peta_ews")
     with kanan:
         row = sel.iloc[0]
         s = EWS[int(row["status"])]
@@ -120,7 +133,7 @@ def badan():
                 f'<div style="margin:12px 0 4px">{pill(int(row["status"]), besar=True, tampil="lengkap")}</div>'
                 f'<div class="angka">{row["pm_besok"]:.1f} <small>µg/m³</small></div>'
                 f'<div class="kv"><span>PM2.5 hari ini (aktual)</span><b>{row["pm_ini"]:.1f}</b></div>'
-                f'<div class="kv"><span>Perubahan</span><b>{"naik" if naik > 0 else "turun"} {abs(naik):.1f}</b></div>'
+                f'<div class="kv"><span>Perubahan</span><b>{"tetap" if abs(naik) < 0.05 else ("naik " if naik > 0 else "turun ") + f"{abs(naik):.1f}"}</b></div>'
                 f'<div class="kv"><span>Kecepatan angin hari ini</span><b>{angin}</b></div>'
                 f'<div class="kv"><span>Ventilasi udara</span><b>{ventilasi(kmh)}</b></div>'
                 f'<div class="jud" style="margin-top:16px">Rekomendasi</div>'

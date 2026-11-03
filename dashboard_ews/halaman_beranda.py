@@ -1,6 +1,6 @@
 import streamlit as st
 
-from data import EWS, ringkasan_data, tabel_besok
+from data import EWS, muat_data, ringkasan_data, tabel_besok
 from ui import kartu
 
 TB, AKHIR, BESOK = tabel_besok()
@@ -45,12 +45,14 @@ with st.container(key="hero"):
     with kanan:
         st.markdown(panel_pratinjau(), unsafe_allow_html=True)
 
+KET_AKURASI = ("hari yang statusnya sama dengan hari sebelumnya (tolok ukur sederhana, bukan model)"
+               if muat_data()[4] == "baseline" else "hari dengan status prediksi sama dengan status sebenarnya")
 st.markdown(
     '<div class="angkabesar">'
     f'<div><div class="n">{r["n_kota"]}</div><div class="l">kabupaten/kota di {r["n_provinsi"]} provinsi</div></div>'
     f'<div><div class="n">{r["penduduk_juta"]:.0f}<small>juta</small></div><div class="l">penduduk dalam cakupan data</div></div>'
     f'<div><div class="n">{r["n_hari"]}<small>hari</small></div><div class="l">data historis, {r["awal"]:%b %Y} sampai {r["akhir"]:%b %Y}</div></div>'
-    f'<div><div class="n">{r["akurasi"] * 100:.1f}<small>%</small></div><div class="l">hari dengan status prediksi sama dengan status sebenarnya</div></div>'
+    f'<div><div class="n">{r["akurasi"] * 100:.1f}<small>%</small></div><div class="l">{KET_AKURASI}</div></div>'
     "</div>", unsafe_allow_html=True)
 
 st.markdown('<div class="bagian">Tiga cara memakai dashboard ini</div>'

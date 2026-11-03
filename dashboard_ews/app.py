@@ -8,7 +8,7 @@ import streamlit as st
 
 st.set_page_config(page_title="AirGuard SDGs EWS", layout="wide")
 
-from data import muat_proyeksi  # noqa: E402  (harus setelah set_page_config)
+from data import muat_data, muat_proyeksi  # noqa: E402  (harus setelah set_page_config)
 from ui import pasang_css  # noqa: E402
 
 pasang_css()
@@ -28,8 +28,12 @@ else:
         position="sidebar",
     )
     with st.sidebar:
+        sumber = muat_data()[4]
+        catatan = {"baseline": "<br><br><b>Catatan:</b> prediksi besok sementara memakai baseline persistence "
+                               "(besok sama dengan hari ini) karena keluaran model tim belum tersedia.",
+                   "contoh": "<br><br><b>Catatan:</b> seluruh angka adalah data contoh (sintetis).", "tim": ""}[sumber]
         st.markdown('<div class="sb-info"><b>Sumber data</b><br>Open-Meteo, diolah tim AirGuard. '
-                    'Status mengikuti rincian proyek dan bukan klaim medis.</div>', unsafe_allow_html=True)
+                    'Status mengikuti rincian proyek dan bukan klaim medis.' + catatan + '</div>', unsafe_allow_html=True)
         if st.button("Kembali ke beranda", key="btn_beranda", use_container_width=True):
             st.session_state["masuk"] = False
             st.rerun()
