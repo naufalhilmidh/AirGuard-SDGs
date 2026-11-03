@@ -112,6 +112,13 @@ st.markdown(
 
     /* daftar peringkat berupa batang horizontal, sebagai pengganti tabel penuh */
     .rlist {display: flex; flex-direction: column; gap: 7px;}
+    /* varian dua jalur: selebar mungkin, tapi tetap boleh menyusut; tingginya tinggal separuh
+       sehingga kartu "5 tertinggi" tidak lagi memaksa baris jadi tinggi */
+    .rlist.k2 {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 24px; align-items: start; width: 100%;}
+    .rlist.k2 .catatan {grid-column: 1 / -1;}
+    .rlist.k2 .rname {white-space: normal; line-height: 1.25;}
+    @media (max-width: 1200px) {.rlist.k2 {grid-template-columns: minmax(0, 1fr);}}
     .rrow {display: grid; grid-template-columns: 20px minmax(0, 1.4fr) minmax(60px, 1fr) 52px;
         align-items: center; gap: 8px;}
     .rrank {font-size: .78rem; font-weight: 600; color: #7A8B80; text-align: right; font-variant-numeric: tabular-nums;}
@@ -129,8 +136,34 @@ st.markdown(
         background: #FBFCF8; border: 1px solid #DDE5D6; border-radius: 16px; padding: 18px 20px;
         box-shadow: 0 1px 2px rgba(23,48,42,.05), 0 8px 24px rgba(23,48,42,.05);
     }
+    /* semua kartu dalam satu baris sama tinggi: Streamlit sudah menaruh stHorizontalBlock
+       sebagai flex row, jadi cukup regangkan kartunya (defaultnya align-items: stretch) */
+    [class*="st-key-card_"] {display: flex; flex-direction: column; height: 100%;}
+    [class*="st-key-card_"] > [data-testid="stVerticalBlock"],
+    [class*="st-key-card_"] > [data-testid="stElementContainer"] {flex: 1 1 auto; min-height: 0; width: 100%;}
+    /* tabel & grafik di dalam kartu mengisi sisa ruang, bukan menyisakan celah di bawah */
+    [class*="st-key-card_"] [data-testid="stDataFrame"],
+    [class*="st-key-card_"] [data-testid="stPlotlyChart"],
+    [class*="st-key-card_"] .js-plotly-plot {width: 100% !important;}
+    /* intro bukan kartu biasa: latar hijau dipasang di KARTU-nya, bukan di blok di dalamnya.
+       Kalau latarnya di elemen dalam, padding kartu (18/20 px) tetap terlihat sebagai pita krem
+       di kiri-kanan-atas-bawah, jadi kotaknya tampak dobel dan tidak presisi. */
+    [class*="st-key-card_intro"] {
+        background: #E3ECDD; border: 1px solid #D8E3D2; border-radius: 14px;
+        box-shadow: none; padding: 14px 18px; height: auto;
+    }
+    [class*="st-key-card_intro"] > [data-testid="stVerticalBlock"],
+    [class*="st-key-card_intro"] > [data-testid="stElementContainer"] {gap: 0 !important;}
+    .intro {background: none; border-radius: 0; padding: 0; font-size: .93rem; line-height: 1.6; color: #17302A;}
+    /* paragraf dari st.markdown selalu menyisakan margin bawah; di dalam blok berwarna itu
+       membuat teks terlihat meleset ke atas. Dirapatkan supaya jarak atas = jarak bawah. */
+    [class*="st-key-card_intro"] [data-testid="stMarkdownContainer"] {margin: 0 !important;}
+    [class*="st-key-card_intro"] [data-testid="stMarkdownContainer"] > :last-child {margin-bottom: 0 !important;}
+    [class*="st-key-card_intro"] [data-testid="stMarkdownContainer"] > :first-child {margin-top: 0 !important;}
     .kartu.flat {border: none; box-shadow: none; padding: 0; background: none;}
-    .grid {display: grid; gap: 16px; align-items: stretch; margin-bottom: 1rem;}
+    /* kartu HTML yang isinya sudah dirender di dalam kartu Streamlit: jangan digambar dua kali */
+    .kartu.isi-kartu {background: none; border: none; box-shadow: none; border-radius: 0; padding: 0;}
+    .grid {display: grid; gap: 16px; align-items: stretch; margin-bottom: 1rem; grid-auto-rows: 1fr;}
     .g3 {grid-template-columns: repeat(3, minmax(0, 1fr));}
     .g4 {grid-template-columns: repeat(4, minmax(0, 1fr));}
     .jud {font-weight: 600; font-size: .95rem; margin-bottom: 6px; color: #17302A;}
@@ -142,7 +175,6 @@ st.markdown(
     .stat .ic svg {width: 19px; height: 19px;}
     .stat .val {font-size: 1.75rem; font-weight: 600; margin: 6px 0 2px; color: #17302A;}
     .stat .ket {font-size: .82rem; color: #5A6B66;}
-    .intro {background: #E3ECDD; border-radius: 14px; padding: 14px 18px; font-size: .93rem; line-height: 1.6; color: #17302A;}
     @media (max-width: 900px) {.g3, .g4 {grid-template-columns: repeat(2, minmax(0, 1fr));}}
 
     /* banner berilustrasi (landing, bagian atas dashboard, ajakan penutup) */
@@ -233,15 +265,32 @@ def grid(kelas, *isi):
 
 
 def intro(teks):
-    st.markdown(f'<div class="intro">{teks}</div>', unsafe_allow_html=True)
+    # Latar hijau dipasang lewat CSS pada kartu ber-key ini (bukan pada div di dalamnya),
+    # supaya tidak ada padding kartu yang menyisakan bingkai krem di sekeliling kotak hijau.
+    with st.container(key="card_intro"):
+        st.markdown(f'<div class="intro">{teks}</div>', unsafe_allow_html=True)
 
 
-def kotak(nama):
-    return st.container(key=f"card_{nama}")
+def kotak(nama, tinggi=None):
+    """Kartu ber-key. Kalau `tinggi` (px) diisi, kartu dikunci setinggi itu dan menata isinya
+    selebar mungkin (flex) supaya padding kiri-kanan tidak dobel.
+
+    Kenapa perlu: kartu yang isinya grafik bertinggi tetap tidak bisa "memanfaatkan sisa ruang" —
+    slot-nya cuma setinggi elemen, sehingga tinggi induk yang dikunci jadi ikut terabaikan.
+    """
+    if tinggi is None:
+        return st.container(key=f"card_{nama}")
+    return st.container(key=f"card_{nama}", height=tinggi, border=False, gap="small")
 
 
 KONFIG_PETA = {"displaylogo": False, "scrollZoom": False,
                "modeBarButtonsToRemove": ["select2d", "lasso2d", "toImage"]}
+
+# Tinggi grafik dan "chrome" kartu (padding 36 + judul 30 + caption dua baris 40 + celah 16 + grafik
+# + border 2 + celah bawah 36). Dipakai untuk baris kartu yang isinya grafik, supaya tinggi kartu
+# dihitung, bukan ditebak.
+CHART = 360
+CHROME = 200
 
 
 def pakai_tema(fig, tinggi=380):
@@ -281,7 +330,7 @@ def daerah_awal(daftar):
 def cek_kondisi(terakhir, besok):
     # fragment: ganti provinsi/kota hanya menghitung ulang bagian ini, bukan seluruh beranda
     st.subheader("Cek kondisi daerahmu")
-    p1, p2, _ = st.columns([1, 1.3, 2])
+    p1, p2 = st.columns([1, 1.3])
     prov = p1.selectbox("Provinsi", PROVINSI, key="prov_beranda")
     opsi = [k for k in semua_kota if PROV_DARI_KOTA[k] == prov]
     awal = next((i for i, k in enumerate(opsi) if TIPE_DARI_KOTA[k] == "Kota"), 0)
@@ -498,8 +547,12 @@ def legenda_zona(klaster, u):
             f'{"".join(baris)}</div>')
 
 
-def daftar_bar(u, kolom, n=10, kolom_kategori=None, catatan=""):
-    """Peringkat ringkas berupa batang horizontal (HTML), diurutkan dari nilai terbesar."""
+def daftar_bar(u, kolom, n=10, kolom_kategori=None, catatan="", kisi=None):
+    """Peringkat ringkas berupa batang horizontal (HTML), diurutkan dari nilai terbesar.
+
+    `kisi=2` membaginya jadi dua jalur (kiri 1..n/2, kanan sisanya): untuk n=10 tinggi daftar
+    tinggal separuh, jadi kartunya tidak memaksa baris jadi tinggi.
+    """
     d = u.nlargest(int(n), kolom)
     puncak = max(float(d[kolom].max()), 1e-9) if len(d) else 1.0
     pakai_kategori = bool(kolom_kategori) and kolom_kategori in u.columns
@@ -514,6 +567,11 @@ def daftar_bar(u, kolom, n=10, kolom_kategori=None, catatan=""):
             f'<span class="rbar"><span style="width:{lebar:.0f}%;background:{warna}"></span></span>'
             f'<span class="rval">{nilai:.1f}</span></div>')
     ekor = f'<div class="catatan">{catatan}</div>' if catatan else ""
+    if kisi and kisi > 1 and len(baris) >= kisi * 2:
+        per = -(-len(baris) // kisi)  # jumlah baris tiap jalur, dibulatkan ke atas
+        jalur = "".join(f'<div class="rcol">{"".join(baris[i:i + per])}</div>'
+                        for i in range(0, len(baris), per))
+        return f'<div class="rlist k{kisi}">{jalur}{ekor}</div>'
     return f'<div class="rlist">{"".join(baris)}{ekor}</div>'
 
 
@@ -727,8 +785,8 @@ def ringkasan():
                 unsafe_allow_html=True)
         with kotak("risiko"):
             st.subheader("5 tertinggi besok")
-            st.caption("Prediksi PM2.5 dalam µg/m³.")
-            st.markdown(daftar_bar(t, "Prediksi besok", 5, kolom_kategori="Kategori besok"),
+            st.markdown(daftar_bar(t, "Prediksi besok", 5, kolom_kategori="Kategori besok",
+                                   catatan="Angka dalam µg/m³."),
                         unsafe_allow_html=True)
         with kotak("legenda"):
             # Legenda mengikuti mode peta: zona cluster dan kategori risiko tidak pernah digabung.
@@ -743,11 +801,13 @@ def ringkasan():
 
     with kotak("peringkat"):
         st.subheader("Peringkat " + ("provinsi" if per_prov else "kabupaten/kota"))
-        f1, f2, _ = st.columns([1, 1, 2])
+        f1, f2 = st.columns(2)
         urut = f1.selectbox("Urutkan berdasarkan", ["Prediksi besok", "PM2.5 hari ini", "Rata-rata periode"],
                             key="urut_peringkat")
         if per_prov:
             jumlah = len(t)
+            # sebelah kanan kosong: keterangan ditaruh di sana, bukan menyisakan kolom menganga
+            f2.caption("Provinsi selalu ditampilkan semua.")
         else:
             pilihan = f2.selectbox("Tampilkan", ["10 teratas", "20 teratas", "Semua"], key="jml_peringkat")
             jumlah = len(t) if pilihan == "Semua" else int(pilihan.split()[0])
@@ -757,8 +817,8 @@ def ringkasan():
         tampil = urutan.head(jumlah)[kolom].rename(
             columns={"Wilayah": "Provinsi" if per_prov else "Kabupaten/kota", "Jumlah wilayah": "Jumlah kab/kota"})
         st.markdown(
-            daftar_bar(urutan, urut, min(jumlah, 12),
-                      catatan="Batang = " + urut.lower() + ". Peringkat penuh dan unduhan ada di tabel lengkap."),
+            daftar_bar(urutan, urut, min(jumlah, 12), kisi=2,
+                       catatan="Batang = " + urut.lower() + ". Peringkat penuh dan unduhan ada di tabel lengkap."),
             unsafe_allow_html=True)
         with st.expander("Tabel lengkap (" + str(len(tampil)) + " baris)"):
             st.dataframe(
@@ -790,7 +850,7 @@ def episode(d, ambang):
 def tren():
     intro("<b>Halaman ini menjawab:</b> kapan polusi meningkat, dan seberapa dekat prediksi model dengan kenyataan?")
 
-    f0, f1, f2, _ = st.columns([1.7, 1.5, 1.1, 0.4], gap="large")
+    f0, f1, f2 = st.columns([1.5, 1.4, 1.1], gap="large")
     level = f0.radio("Lihat", ["Kabupaten/kota", "Provinsi"], horizontal=True, key="level_tren")
     if level == "Provinsi":
         opsi = [p for p in PROVINSI if p in {PROV_DARI_KOTA[k] for k in pilih_kota}]
@@ -830,7 +890,7 @@ def tren():
 
     kiri, kanan = st.columns(2, gap="large")
     with kiri:
-        with kotak("error"):
+        with kotak("error", tinggi=CHART + 90):
             st.subheader("Selisih prediksi dan aktual")
             st.caption("Di atas nol berarti model memprediksi terlalu tinggi, di bawah nol terlalu rendah. "
                        "Makin dekat ke nol, makin akurat.")
@@ -841,7 +901,7 @@ def tren():
             fig2.update_yaxes(title="Prediksi - aktual (µg/m³)", zeroline=True, zerolinecolor="#8A9A95")
             st.plotly_chart(pakai_tema(fig2, 300))
     with kanan:
-        with kotak("episode"):
+        with kotak("episode", tinggi=CHART + 90):
             st.subheader("Episode polusi tinggi")
             st.caption("Periode hari-hari berturut-turut ketika PM2.5 aktual melewati ambang. "
                        "Puncak adalah nilai tertinggi dalam periode itu.")
@@ -849,13 +909,19 @@ def tren():
             if ep.empty:
                 st.write("Tidak ada hari di atas ambang pada rentang ini.")
             else:
-                st.dataframe(ep, hide_index=True, height=300,
+                st.dataframe(ep, hide_index=True, height=min(35 * len(ep) + 38, 300),
                              column_config={"Puncak": st.column_config.NumberColumn(format="%.1f")})
 
 
 @st.cache_data(show_spinner=False, max_entries=48)
 def hitung_cuaca(daftar_kota, awal, akhir, grup):
-    """Agregasi berat untuk tab Faktor Lain. Di-cache per kombinasi filter supaya tidak dihitung ulang."""
+    """Agregasi berat untuk tab Faktor Lain. Di-cache per kombinasi filter supaya tidak dihitung ulang.
+
+    `grup` di sini adalah NAMA KOLOM ("provinsi" / "kota"), bukan label tampilan. Dulu yang
+    di-groupby adalah variabel string literalnya, sehingga semua kota di Jawa ikut dirata-ratakan
+    menjadi satu deret per tanggal: korelasi keluar sebagai satu baris saja, dan setiap baris
+    heatmap menampilkan angka yang sama untuk provinsi berbeda.
+    """
     d = pre[pre["kota"].isin(daftar_kota) & pre["tanggal"].between(awal, akhir)]
     harian = d.groupby([grup, "tanggal"], as_index=False, observed=True)[["pm2_5", *FAKTOR]].mean()
     korelasi = pd.DataFrame({
@@ -899,17 +965,19 @@ def cuaca():
         st.plotly_chart(pakai_tema(fig, 130 + 52 * len(korelasi)))
 
     var = st.selectbox("Faktor pembanding", list(FAKTOR), format_func=FAKTOR.get)
+    # tinggi kartu dikunci dalam piksel (bukan stretch): isi kartu ini adalah grafik dengan
+    # tinggi tetap, jadi "sisa ruang" tidak ada gunanya dan malah bikin tinggi induk diabaikan
     kiri, kanan = st.columns(2, gap="large")
     with kiri:
-        with kotak("sebar"):
+        with kotak("sebar", tinggi=CHART + CHROME):
             st.subheader("PM2.5 dan satu faktor lain")
             st.caption("Setiap titik adalah satu hari di satu kabupaten/kota. Kalau sebaran titik naik ke kanan, "
                        "PM2.5 cenderung naik bersama faktor yang dipilih.")
             fig2 = px.scatter(contoh, x=var, y="pm2_5", color=grup, opacity=0.55, color_discrete_map=warna,
                               labels={var: FAKTOR[var], "pm2_5": "PM2.5 (µg/m³)", grup: grup_nama})
-            st.plotly_chart(pakai_tema(fig2, 340))
+            st.plotly_chart(pakai_tema(fig2, CHART))
     with kanan:
-        with kotak("bulanan"):
+        with kotak("bulanan", tinggi=CHART + CHROME):
             st.subheader("Rata-rata PM2.5 per bulan")
             st.caption("Bulan dengan nilai tinggi menunjukkan musim polusi pada data ini. "
                        "Berguna untuk melihat pola musiman tiap " + grup_nama.lower() + ".")
@@ -917,7 +985,7 @@ def cuaca():
                            labels={"bulan": "Bulan", "pm2_5": "PM2.5 (µg/m³)", grup: grup_nama})
             fig3.update_xaxes(tickmode="array", tickvals=list(range(1, 13)),
                               ticktext=["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"])
-            st.plotly_chart(pakai_tema(fig3, 340))
+            st.plotly_chart(pakai_tema(fig3, CHART))
 
 
 # ====================== EVALUASI MODEL (data uji) ======================
