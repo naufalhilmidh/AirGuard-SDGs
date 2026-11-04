@@ -2,13 +2,28 @@
 
 ## 1. Status progress
 
-Dokumen ini mencatat tahap awal modeling AirGuard.
+Dokumen ini mencatat hasil modeling klasifikasi risiko PM2.5 pada proyek AirGuard.
 
-Pada rancangan terbaru:
+Status saat ini:
 
-- Fokus modeling adalah klasifikasi tiga kategori risiko PM2.5.
+- Fokus modeling adalah klasifikasi tiga kategori risiko PM2.5 hari berikutnya.
 - Target klasifikasi adalah `kategori_target_pm2_5`.
-- Training dan evaluasi model belum dilakukan pada dokumen ini.
+- Training, pemilihan model, dan evaluasi akhir pada data test sudah selesai.
+- Pembagian data sudah diperbaiki. Versi sebelumnya salah mengambil baris karena `X` dan `y` dibuat sebelum `df` diurutkan ulang. Semua angka di dokumen ini berasal dari notebook versi perbaikan.
+- Hasil prediksi, metrik, dan feature importance belum disimpan ke file (lihat Bagian 15).
+
+Ringkasan hasil:
+
+| Item | Nilai |
+|---|---|
+| Model terpilih | LightGBM dengan class weight |
+| Macro F1 validation | 0,7381 |
+| Macro F1 test | 0,7613 |
+| Accuracy test | 0,8210 |
+| Recall Tidak Sehat pada test | 0,7938 |
+| Recall Baik pada test | 0,6796 |
+
+Keunggulan model atas baseline persistence kecil pada macro F1 (selisih 0,0044 pada validation). Model lebih baik pada recall kelas Baik dan Tidak Sehat. Penjelasan lengkap ada di Bagian 12.
 
 ## 2. Dataset yang digunakan
 
@@ -20,22 +35,25 @@ Sumber data:
 
 Cakupan dataset:
 
-| Informasi | Nilai |
-|---|---:|
-| Jumlah baris | 183.379 |
-| Jumlah kolom awal | 16 |
-| Jumlah kabupaten/kota | 119 |
-| Periode awal | 2022-08-04 |
-| Periode akhir | 2026-10-22 |
-| Jumlah hari per wilayah | 1.541 |
-| Missing value awal | 0 |
-| Duplikasi wilayah-tanggal | 0 |
+| Informasi | Data mentah | Data setelah preprocessing |
+|---|---:|---:|
+| Jumlah baris | 183.379 | 181.594 |
+| Jumlah kolom | 16 | 26 |
+| Jumlah kabupaten/kota | 119 | 119 |
+| Jumlah provinsi | 6 | 6 |
+| Periode awal | 2022-08-04 | 2022-08-18 |
+| Periode akhir | 2026-10-22 | 2026-10-21 |
+| Jumlah hari per wilayah | 1.541 | 1.526 |
+| Missing value | 0 | 0 |
+| Duplikasi wilayah-tanggal | 0 | 0 |
+
+Selisih 1.785 baris berasal dari 15 baris per wilayah (119 x 15). Empat belas baris awal hilang karena lag 14 hari. Satu baris akhir hilang karena tidak ada target hari berikutnya.
 
 File sumber:
 
 `data/data_gabungan/airguard_harian_kualitas_udara_jawa.csv`
 
-Output preprocessing yang direncanakan:
+File hasil preprocessing:
 
 `data/data_gabungan/airguard_preprocessed.csv`
 
@@ -70,7 +88,7 @@ Output preprocessing yang direncanakan:
 
 | Variabel | Keterangan |
 |---|---|
-| `pm2_5` | Konsentrasi PM2.5, target utama |
+| `pm2_5` | Konsentrasi PM2.5 |
 | `pm10` | Konsentrasi PM10 |
 | `carbon_monoxide` | Konsentrasi karbon monoksida |
 | `nitrogen_dioxide` | Konsentrasi nitrogen dioksida |
@@ -79,11 +97,9 @@ Output preprocessing yang direncanakan:
 
 ## 4. Target modeling
 
-Target utama adalah PM2.5 pada hari berikutnya untuk kabupaten/kota yang sama.
+Target adalah kategori risiko PM2.5 pada hari berikutnya untuk kabupaten/kota yang sama.
 
-`target_pm2_5 = pm2_5 pada tanggal berikutnya`
-
-Target dibuat menggunakan:
+Nilai PM2.5 hari berikutnya dibuat dengan kode ini:
 
 ```python
 df["target_pm2_5"] = (
@@ -92,13 +108,17 @@ df["target_pm2_5"] = (
 )
 ```
 
-Contoh:
+Nilai itu lalu diubah menjadi `kategori_target_pm2_5` memakai ambang pada Bagian 8.
 
-| Wilayah | Tanggal input | PM2.5 input | Target |
-|---|---|---:|---:|
-| Kota Bekasi | 2025-01-01 | 60,0 | PM2.5 tanggal 2025-01-02 |
+Contoh dari data (Kabupaten Administrasi Kepulauan Seribu):
 
-Karena target yang digunakan adalah `kategori_target_pm2_5`, tahap modeling ini difokuskan pada klasifikasi multiclass. Target memiliki tiga kelas: Baik, Sedang, dan Tidak Sehat.
+| Tanggal input | PM2.5 input | PM2.5 hari berikutnya | Kategori target |
+|---|---:|---:|---|
+| 2022-08-18 | 22,03 | 21,33 | Sedang (Waspada) |
+
+PM2.5 hari berikutnya (21,33) sama dengan PM2.5 pada baris tanggal 2022-08-19. Ini menunjukkan target dibuat dengan benar.
+
+Tahap modeling ini memakai klasifikasi multiclass dengan tiga kelas: Baik, Sedang, dan Tidak Sehat.
 
 ## 5. Feature engineering yang digunakan
 
@@ -126,7 +146,7 @@ for lag in [1, 2, 3, 7, 14]:
 
 ### 5.2 Fitur rolling PM2.5
 
-Rolling merupakan rata-rata PM2.5 pada beberapa hari terakhir.
+Rolling adalah rata-rata PM2.5 pada beberapa hari terakhir.
 
 | Variabel | Keterangan |
 |---|---|
@@ -147,13 +167,13 @@ for window in [3, 7, 14]:
 Perbedaan:
 
 - Lag mengambil satu nilai pada hari tertentu.
-- Rolling mengambil ringkasan rata-rata beberapa hari.
+- Rolling mengambil rata-rata beberapa hari.
 - Lag menunjukkan kondisi spesifik.
-- Rolling menunjukkan kecenderungan atau tren.
+- Rolling menunjukkan kecenderungan jangka pendek.
 
 ### 5.3 Fitur kalender
 
-Fitur kalender digunakan untuk menangkap pola harian, mingguan, dan tahunan.
+Fitur kalender dibuat di notebook modeling, setelah data diurutkan berdasarkan tanggal dan wilayah.
 
 | Variabel | Keterangan |
 |---|---|
@@ -177,7 +197,7 @@ df["akhir_pekan"] = (
 
 ### 5.4 Fitur kualitas udara lain
 
-Variabel polutan lain digunakan sebagai fitur tambahan:
+Polutan lain dipakai sebagai fitur tambahan:
 
 - `pm10`
 - `carbon_monoxide`
@@ -185,55 +205,51 @@ Variabel polutan lain digunakan sebagai fitur tambahan:
 - `sulphur_dioxide`
 - `ozone`
 
-Variabel cuaca belum digunakan pada dataset terbaru karena data final yang tersedia hanya berisi kualitas udara.
+Variabel cuaca belum dipakai karena data final hanya berisi kualitas udara.
 
-## 6. Daftar fitur prediksi sementara
+### 5.5 Fitur geografis
+
+Lima variabel geografis ikut menjadi fitur: `latitude`, `longitude`, `elevasi_m`, `luas_km2`, dan `penduduk`. Nilainya tetap untuk setiap wilayah. Model dapat memakainya untuk mengenali wilayah.
+
+## 6. Daftar fitur model
+
+Model memakai 24 fitur:
 
 ```python
-fitur_prediksi = [
-    "pm2_5",
-    "pm10",
-    "carbon_monoxide",
-    "nitrogen_dioxide",
-    "sulphur_dioxide",
-    "ozone",
+fitur_model = [
+    # Geografis
+    "latitude", "longitude", "elevasi_m", "luas_km2", "penduduk",
 
-    "pm2_5_lag_1",
-    "pm2_5_lag_2",
-    "pm2_5_lag_3",
-    "pm2_5_lag_7",
-    "pm2_5_lag_14",
+    # Kualitas udara saat ini
+    "pm2_5", "pm10", "carbon_monoxide",
+    "nitrogen_dioxide", "sulphur_dioxide", "ozone",
 
-    "pm2_5_rolling_3",
-    "pm2_5_rolling_7",
-    "pm2_5_rolling_14",
+    # Lag
+    "pm2_5_lag_1", "pm2_5_lag_2", "pm2_5_lag_3",
+    "pm2_5_lag_7", "pm2_5_lag_14",
 
-    "tahun",
-    "bulan",
-    "hari_dalam_minggu",
-    "hari_dalam_tahun",
-    "akhir_pekan"
+    # Rolling
+    "pm2_5_rolling_3", "pm2_5_rolling_7", "pm2_5_rolling_14",
+
+    # Kalender
+    "tahun", "bulan", "hari_dalam_minggu",
+    "hari_dalam_tahun", "akhir_pekan"
 ]
 
-target = "target_pm2_5"
+target = "kategori_target_pm2_5"
 ```
 
-Kolom identitas seperti `nama_kabkota`, `provinsi`, dan `kode_kabkota` tetap disimpan untuk pelacakan hasil, tetapi tidak langsung digunakan sebagai fitur numerik.
+Kolom identitas seperti `nama_kabkota`, `provinsi`, `kode_kabkota`, dan `tipe` disimpan untuk pelacakan hasil. Model tidak memakainya sebagai fitur.
 
-## 7. Proses penghapusan baris awal dan akhir
+## 7. Penghapusan baris awal dan akhir
 
-Fitur lag dan rolling menghasilkan nilai kosong pada awal periode setiap wilayah. Target juga kosong pada tanggal terakhir setiap wilayah karena tidak ada data hari berikutnya.
+Lag dan rolling menghasilkan nilai kosong pada awal periode setiap wilayah. Target kosong pada tanggal terakhir setiap wilayah.
 
 ```python
 fitur_lag_rolling = [
-    "pm2_5_lag_1",
-    "pm2_5_lag_2",
-    "pm2_5_lag_3",
-    "pm2_5_lag_7",
-    "pm2_5_lag_14",
-    "pm2_5_rolling_3",
-    "pm2_5_rolling_7",
-    "pm2_5_rolling_14"
+    "pm2_5_lag_1", "pm2_5_lag_2", "pm2_5_lag_3",
+    "pm2_5_lag_7", "pm2_5_lag_14",
+    "pm2_5_rolling_3", "pm2_5_rolling_7", "pm2_5_rolling_14"
 ]
 
 df_preprocessed = df.dropna(
@@ -241,17 +257,17 @@ df_preprocessed = df.dropna(
 ).reset_index(drop=True)
 ```
 
-Baris tersebut bukan missing value pada data mentah. Baris tersebut tidak digunakan karena belum memiliki histori atau target yang lengkap.
+Baris ini bukan missing value pada data mentah. Model tidak memakainya karena histori atau target belum lengkap. Totalnya 1.785 baris (lihat Bagian 2).
 
 ## 8. Klasifikasi risiko
 
-Klasifikasi merupakan target utama pada tahap modeling ini dan merepresentasikan kategori risiko PM2.5 hari berikutnya.
+Kategori risiko dibuat dari nilai PM2.5 dengan ambang berikut.
 
 | Rentang PM2.5 | Kategori |
 |---:|---|
-| Ã¢â€°Â¤ 15 Ã‚Âµg/mÃ‚Â³ | Baik (Aman) |
-| > 15 sampai 55 Ã‚Âµg/mÃ‚Â³ | Sedang (Waspada) |
-| > 55 Ã‚Âµg/mÃ‚Â³ | Tidak Sehat (Bahaya) |
+| ≤ 15 µg/m³ | Baik (Aman) |
+| > 15 sampai 55 µg/m³ | Sedang (Waspada) |
+| > 55 µg/m³ | Tidak Sehat (Bahaya) |
 
 Kode:
 
@@ -261,235 +277,290 @@ def label_risiko(pm25):
         return "Baik (Aman)"
     elif pm25 <= 55:
         return "Sedang (Waspada)"
-    else:
-        return "Tidak Sehat (Bahaya)"
+    return "Tidak Sehat (Bahaya)"
 ```
 
-Klasifikasi ini digunakan untuk:
+Hasil klasifikasi dipakai untuk:
 
 - peta risiko besok
 - tabel ranking
 - jumlah wilayah berisiko tinggi
 - warna status pada dashboard
 
-Pada tahap ini, model memprediksi kategori risiko secara langsung. Forecasting regresi tidak termasuk fokus modeling saat ini.
+Model memprediksi kategori risiko secara langsung. Regresi PM2.5 tidak termasuk dalam tahap ini.
+
+Label encoding yang dipakai model:
+
+| Kategori | Kode |
+|---|---:|
+| Baik (Aman) | 0 |
+| Sedang (Waspada) | 1 |
+| Tidak Sehat (Bahaya) | 2 |
 
 ## 9. Pembagian dataset berbasis waktu
 
-Data dibagi menjadi tiga subset dengan urutan waktu. Random train-test split tidak digunakan karena dapat mencampurkan informasi masa depan ke dalam data training.
+Data dibagi menurut waktu. Random split tidak dipakai karena dapat membawa informasi masa depan ke data training.
 
-Rencana pembagian:
+| Subset | Periode | Jumlah baris | Fungsi |
+|---|---|---:|---|
+| Train | 2022-08-18 sampai 2024-12-31 | 103.173 | Melatih model |
+| Validation | 2025-01-01 sampai 2025-12-31 | 43.435 | Memilih model |
+| Test | 2026-01-01 sampai 2026-10-21 | 34.986 | Evaluasi akhir satu kali |
 
-| Subset | Periode | Fungsi |
-|---|---|---|
-| Train | 2022-08-18 sampai 2024-12-31 | Melatih model |
-| Validation | 2025-01-01 sampai 2025-12-31 | Memilih model dan tuning parameter |
-| Test | 2026-01-01 sampai 2026-10-21 | Evaluasi akhir satu kali |
+Setiap subset memakai tanggal yang sama untuk semua kabupaten/kota. Test hanya dipakai satu kali, setelah model terpilih.
 
-Setiap subset dibuat berdasarkan tanggal yang sama untuk seluruh kabupaten/kota. Target dan fitur pada test tidak digunakan saat training atau pemilihan model.
-
-Pembagian ini lebih sesuai daripada split acak karena tujuan proyek adalah memprediksi kategori risiko pada periode mendatang.
+Notebook memeriksa pembagian ini dengan `assert`. Pemeriksaan memastikan tanggal setiap subset sesuai rencana dan tidak ada tumpang tindih waktu. Semua pemeriksaan lolos.
 
 ## 10. Penanganan ketidakseimbangan kelas
 
-Distribusi target secara keseluruhan:
+### 10.1 Distribusi kelas
 
-| Kategori | Jumlah observasi |
+Distribusi seluruh data:
+
+| Kategori | Jumlah | Persentase |
+|---|---:|---:|
+| Sedang (Waspada) | 118.774 | 65,41% |
+| Tidak Sehat (Bahaya) | 35.858 | 19,75% |
+| Baik (Aman) | 26.962 | 14,85% |
+
+Distribusi per subset:
+
+| Subset | Baik (Aman) | Sedang (Waspada) | Tidak Sehat (Bahaya) |
+|---|---:|---:|---:|
+| Train | 23.145 (22,43%) | 69.327 (67,19%) | 10.701 (10,37%) |
+| Validation | 2.147 (4,94%) | 26.833 (61,78%) | 14.455 (33,28%) |
+| Test | 1.670 (4,77%) | 22.614 (64,64%) | 10.702 (30,59%) |
+
+Distribusi per tahun:
+
+| Tahun | Baik (Aman) | Sedang (Waspada) | Tidak Sehat (Bahaya) |
+|---|---:|---:|---:|
+| 2022 | 29,20% | 63,95% | 6,85% |
+| 2023 | 21,52% | 69,68% | 8,80% |
+| 2024 | 20,83% | 65,92% | 13,25% |
+| 2025 | 4,94% | 61,78% | 33,28% |
+| 2026 | 4,77% | 64,64% | 30,59% |
+
+### 10.2 Pergeseran distribusi
+
+Distribusi kelas berubah besar antara train dan dua subset lainnya.
+
+- Kelas Baik turun dari 22,43% pada train menjadi 4,94% pada validation dan 4,77% pada test.
+- Kelas Tidak Sehat naik dari 10,37% pada train menjadi 33,28% pada validation dan 30,59% pada test.
+- Perubahan terjadi pada tahun 2025, bukan bertahap.
+
+Penyebab perubahan ini belum diselidiki. Perubahan bisa berasal dari kondisi udara yang memang memburuk, atau dari perubahan pada data sumber. Cek ini perlu dilakukan sebelum hasil dipakai sebagai dasar keputusan.
+
+Dampaknya pada model:
+
+- Model dilatih pada data dengan lebih banyak hari Baik dan lebih sedikit hari Tidak Sehat.
+- Model diuji pada data dengan pola sebaliknya.
+- Presisi kelas Baik pada test (0,6309) sangat mungkin terpengaruh, karena kelas ini jarang pada test.
+
+### 10.3 Strategi yang dibandingkan
+
+1. Tanpa balancing sebagai baseline.
+2. Class weight `balanced`. Untuk HistGradientBoosting, bobot diberikan lewat `sample_weight`.
+3. SMOTE hanya pada data train. Jumlah train naik dari `[23.145, 69.327, 10.701]` menjadi `[69.327, 69.327, 69.327]`.
+
+SMOTE tidak dipakai pada validation dan test.
+
+## 11. Model klasifikasi
+
+Tiga model dibandingkan:
+
+1. **LightGBM Classifier**: `n_estimators=300`, `learning_rate=0,05`, `num_leaves=63`.
+2. **Extra Trees Classifier**: `n_estimators=300`, `min_samples_leaf=2`.
+3. **HistGradientBoosting Classifier**: `max_iter=300`, `learning_rate=0,05`.
+
+Semua model memakai `random_state=42`. Hyperparameter belum di-tuning. Nilai di atas adalah pengaturan tetap.
+
+Baseline:
+
+- **Dummy Classifier**: selalu memprediksi kelas mayoritas.
+- **Persistence kategori**: memprediksi kategori besok sama dengan kategori PM2.5 hari ini.
+
+## 12. Hasil evaluasi
+
+Metrik yang dicatat: accuracy, balanced accuracy, macro F1, serta recall dan F1 per kelas. Accuracy tidak dipakai sendirian karena kelas Sedang dominan.
+
+### 12.1 Hasil pada validation
+
+Diurutkan menurut macro F1.
+
+| Model | Strategi | Accuracy | Balanced acc. | Macro F1 | Recall Baik | Recall Sedang | Recall Tidak Sehat |
+|---|---|---:|---:|---:|---:|---:|---:|
+| **LightGBM** | **Class weight** | **0,7874** | **0,7490** | **0,7381** | **0,6577** | **0,7929** | **0,7963** |
+| Persistence | Baseline | 0,7916 | 0,7336 | 0,7337 | 0,6274 | 0,8315 | 0,7420 |
+| HistGB | Class weight | 0,7812 | 0,7506 | 0,7326 | 0,6656 | 0,7734 | 0,8129 |
+| HistGB | SMOTE | 0,7817 | 0,7318 | 0,7309 | 0,6288 | 0,8042 | 0,7624 |
+| ExtraTrees | SMOTE | 0,7848 | 0,7446 | 0,7309 | 0,6646 | 0,8062 | 0,7629 |
+| LightGBM | SMOTE | 0,7781 | 0,7311 | 0,7286 | 0,6162 | 0,7819 | 0,7951 |
+| HistGB | Tanpa balancing | 0,7935 | 0,7000 | 0,7262 | 0,5566 | 0,8854 | 0,6580 |
+| LightGBM | Tanpa balancing | 0,7959 | 0,6972 | 0,7261 | 0,5380 | 0,8849 | 0,6688 |
+| ExtraTrees | Class weight | 0,7816 | 0,7010 | 0,7176 | 0,6218 | 0,9049 | 0,5765 |
+| ExtraTrees | Tanpa balancing | 0,7862 | 0,6865 | 0,7158 | 0,5673 | 0,9178 | 0,5745 |
+| Dummy | Kelas mayoritas | 0,6178 | 0,3333 | 0,2546 | 0,0000 | 1,0000 | 0,0000 |
+
+### 12.2 Temuan pada validation
+
+- LightGBM dengan class weight punya macro F1 tertinggi (0,7381).
+- Selisihnya dengan HistGB class weight (0,7326) dan persistence (0,7337) kecil. Validation hanya mencakup satu tahun, jadi selisih sekecil ini belum cukup untuk menyatakan satu model unggul secara pasti.
+- Persistence adalah baseline yang kuat. Kategori hari ini sudah memprediksi kategori besok dengan akurasi 79,16%.
+- Class weight dan SMOTE menaikkan recall kelas Baik dan Tidak Sehat pada hampir semua model dibanding tanpa balancing.
+- Class weight menurunkan recall kelas Sedang. Ini harga yang wajar untuk deteksi kelas minoritas.
+- Class weight sedikit lebih baik daripada SMOTE pada macro F1 untuk LightGBM dan HistGB. Hasil ini sejalan dengan rencana awal yang menjadikan class weight sebagai pendekatan utama.
+- ExtraTrees memberi hasil terendah di antara tiga model pada kondisi tanpa balancing dan class weight.
+
+Perbandingan model terpilih dengan persistence pada validation:
+
+| Metrik | LightGBM class weight | Persistence | Selisih |
+|---|---:|---:|---:|
+| Macro F1 | 0,7381 | 0,7337 | +0,0044 |
+| Balanced accuracy | 0,7490 | 0,7336 | +0,0154 |
+| Accuracy | 0,7874 | 0,7916 | -0,0042 |
+| Recall Baik | 0,6577 | 0,6274 | +0,0303 |
+| Recall Sedang | 0,7929 | 0,8315 | -0,0386 |
+| Recall Tidak Sehat | 0,7963 | 0,7420 | +0,0543 |
+
+Keunggulan model terlihat paling jelas pada recall Tidak Sehat. Untuk sistem peringatan, ini metrik yang paling penting.
+
+### 12.3 Model terpilih
+
+Model terpilih berdasarkan macro F1 pada validation: **LightGBM dengan class weight**.
+
+### 12.4 Hasil akhir pada test
+
+Evaluasi dilakukan satu kali pada data test (2026-01-01 sampai 2026-10-21).
+
+| Kelas | Precision | Recall | F1-score | Jumlah data |
+|---|---:|---:|---:|---:|
+| Baik (Aman) | 0,6309 | 0,6796 | 0,6544 | 1.670 |
+| Sedang (Waspada) | 0,8744 | 0,8443 | 0,8591 | 22.614 |
+| Tidak Sehat (Bahaya) | 0,7483 | 0,7938 | 0,7703 | 10.702 |
+
+| Metrik keseluruhan | Nilai |
 |---|---:|
-| Sedang (Waspada) | 118.774 |
-| Tidak Sehat (Bahaya) | 35.858 |
-| Baik (Aman) | 26.962 |
+| Accuracy | 0,8210 |
+| Balanced accuracy (macro recall) | 0,7726 |
+| Macro F1 | 0,7613 |
+| Weighted F1 | 0,8222 |
 
-Kelas Sedang merupakan kelas mayoritas. Kelas Baik dan Tidak Sehat lebih sedikit. Selain imbalance, distribusi kelas juga dapat berubah antarperiode sehingga distribusi train, validation, dan test harus dilaporkan secara terpisah.
+Interpretasi:
 
-Strategi yang akan dibandingkan:
+- Model mendeteksi 79,38% hari Tidak Sehat dan 67,96% hari Baik.
+- Kelas Sedang paling mudah diprediksi (F1 0,8591).
+- Kelas Baik paling sulit (F1 0,6544). Kelas ini hanya 4,77% dari data test.
+- Metrik test lebih tinggi daripada validation. Periode test lebih pendek dan tidak mencakup November dan Desember, jadi kedua angka tidak sepenuhnya sebanding.
 
-1. Model tanpa balancing sebagai baseline.
-2. Class weight untuk memberi penalti lebih besar pada kelas minoritas.
-3. SMOTE yang hanya diterapkan pada data train.
+Matriks kebingungan sudah dibuat di notebook (jumlah dan persentase per kelas aktual). Angkanya belum disalin ke dokumen ini.
 
-SMOTE tidak boleh diterapkan pada validation atau test. SMOTE juga harus dilakukan setelah split waktu dan hanya menggunakan fitur numerik yang tersedia pada data training.
+### 12.5 Batas kesimpulan
 
-Class weight menjadi pendekatan utama yang lebih aman untuk data deret waktu. SMOTE digunakan sebagai eksperimen pembanding karena data sintetis dapat kurang merepresentasikan pola temporal atau karakteristik wilayah sebenarnya.
-
-## 11. Rencana model klasifikasi
-
-Fokus model hanya pada klasifikasi tiga kelas:
-
-1. **LightGBM Classifier**
-   - Kandidat model utama.
-   - Cocok untuk data tabular berukuran besar.
-   - Dapat menangkap pola non-linear.
-   - Dapat menggunakan pembobotan kelas.
-
-2. **Extra Trees Classifier**
-   - Model ensemble berbasis pohon.
-   - Tidak memerlukan standardisasi fitur.
-   - Dapat menggunakan `class_weight="balanced"`.
-
-3. **HistGradientBoosting Classifier**
-   - Model boosting untuk data tabular.
-   - Dapat menangkap hubungan non-linear.
-   - Digunakan sebagai pembanding.
-
-Baseline tambahan:
-
-- Dummy Classifier.
-- Prediksi kategori berdasarkan kategori PM2.5 hari sebelumnya.
-
-## 12. Metrik evaluasi
-
-Accuracy tidak digunakan sebagai satu-satunya metrik karena kelas Sedang dominan.
-
-Metrik yang dicatat:
-
-- Precision per kelas.
-- Recall per kelas.
-- F1-score per kelas.
-- Macro F1-score.
-- Balanced accuracy.
-- Confusion matrix.
-
-Fokus interpretasi:
-
-- Recall kelas Baik: seberapa banyak kondisi Baik yang berhasil dikenali.
-- Recall kelas Tidak Sehat: seberapa banyak kondisi berbahaya yang berhasil dideteksi.
-- Macro F1: keseimbangan performa pada seluruh kelas.
+- Persistence belum dievaluasi pada test. Karena itu dokumen ini belum bisa menyatakan bahwa model mengalahkan baseline pada test.
+- Pergeseran distribusi kelas (Bagian 10.2) membuat performa pada periode berikutnya sulit diperkirakan.
+- Hyperparameter belum di-tuning.
+- Evaluasi belum dipecah per wilayah atau per provinsi.
 
 ## 13. Pencegahan data leakage
 
 - Lag dan rolling dihitung per kabupaten/kota.
-- Fitur hanya menggunakan data saat ini dan masa lalu.
-- Nilai target tidak digunakan sebagai fitur.
-- Data masa depan tidak boleh masuk ke proses training.
-- Scaler hanya di-fit menggunakan data training.
-- Pembagian data dilakukan berdasarkan waktu, bukan random split.
-- US AQI tidak digunakan sebagai fitur karena terlalu dekat dengan PM2.5.
+- Fitur hanya memakai data hari ini dan masa lalu.
+- Target tidak dipakai sebagai fitur.
+- Pembagian data berdasarkan waktu, bukan random split.
+- `X` dan `y` diambil langsung dari `df` yang sudah diurutkan, tanpa bergantung pada index lama.
+- Notebook memakai `assert` untuk memastikan periode subset benar dan tidak tumpang tindih.
+- SMOTE hanya dijalankan pada data train.
+- Pemilihan model memakai validation. Test dipakai satu kali.
+- US AQI tidak dipakai sebagai fitur karena terlalu dekat dengan PM2.5.
+- Notebook belum memakai scaler. Model berbasis pohon tidak memerlukannya.
 
-## 14. Status pekerjaan saat ini
+Satu risiko yang masih ada: fitur `tahun`. Data train hanya berisi 2022 sampai 2024, sedangkan validation dan test berisi 2025 dan 2026. Model berbasis pohon tidak dapat mempelajari nilai tahun yang belum pernah muncul. Pengaruh fitur ini perlu diuji (Bagian 14).
 
-### Sudah tersedia
+## 14. Pekerjaan lanjutan
 
-- Dataset kualitas udara Pulau Jawa.
-- Pemeriksaan missing value.
-- Pemeriksaan duplikasi wilayah-tanggal.
-- Pemeriksaan kelengkapan periode.
-- EDA distribusi dan korelasi.
-- Fitur lag PM2.5.
-- Fitur rolling PM2.5.
-- Target PM2.5 hari berikutnya.
-- Rancangan kategori risiko.
+### Sudah selesai
 
-### Masih akan dikerjakan
+- Dataset kualitas udara Pulau Jawa dibaca dan diperiksa.
+- Missing value dan duplikasi wilayah-tanggal diperiksa.
+- EDA distribusi, korelasi, tren, dan distribusi risiko.
+- Fitur lag, rolling, dan kalender.
+- Target klasifikasi.
+- Split berbasis waktu dengan pemeriksaan otomatis.
+- Encoding label.
+- Baseline Dummy dan persistence.
+- Training tiga model dengan tiga strategi imbalance.
+- Pemilihan model pada validation.
+- Evaluasi akhir pada test.
 
-- Memastikan file preprocessing final tersimpan.
-- Membuat persistence baseline.
-- Membuat rolling mean baseline.
-- Melatih LightGBM Regressor.
-- Melatih Extra Trees Regressor.
-- Melatih HistGradientBoosting Regressor.
-- Mengevaluasi MAE, RMSE, dan RÃ‚Â².
-- Menyimpan hasil prediksi dan feature importance.
-- Menghubungkan output modeling ke dashboard.
+### Belum dikerjakan
 
-## 15. File output modeling yang direncanakan
+1. Evaluasi baseline persistence pada test sebagai pembanding laporan. Hasilnya tidak boleh dipakai untuk memilih model.
+2. Selidiki perubahan distribusi kelas pada tahun 2025.
+3. Uji model tanpa fitur `tahun` pada validation.
+4. Tuning hyperparameter LightGBM pada validation.
+5. Hitung feature importance sebagai angka dan simpan ke file. Notebook baru menampilkan grafik.
+6. Salin angka confusion matrix ke dokumen ini.
+7. Evaluasi performa per provinsi dan per kabupaten/kota.
+8. Simpan prediksi, metrik, dan model untuk dashboard (Bagian 15).
+9. Hubungkan output ke dashboard.
 
-- `data/data_gabungan/airguard_preprocessed.csv`
-- `data/data_gabungan/airguard_predictions.csv`
-- `data/data_gabungan/model_metrics.csv`
-- `data/data_gabungan/feature_importance.csv`
-- `models/airguard_model.joblib`
+Catatan teknis: pemeriksaan kolom di notebook (Cell 24) berjalan sebelum fitur kalender dibuat. Hasilnya melaporkan lima kolom kalender sebagai belum tersedia. Ini bukan error data. Pindahkan cell tersebut ke setelah fitur kalender dibuat agar hasilnya tidak membingungkan.
 
-Dokumen ini akan diperbarui setelah tahap modeling dan evaluasi klasifikasi selesai.
+## 15. File output modeling
+
+| File | Status |
+|---|---|
+| `data/data_gabungan/airguard_preprocessed.csv` | Tersedia |
+| `data/data_gabungan/airguard_predictions.csv` | Belum dibuat |
+| `data/data_gabungan/model_metrics.csv` | Belum dibuat |
+| `data/data_gabungan/feature_importance.csv` | Belum dibuat |
+| `models/airguard_model.joblib` | Belum dibuat |
 
 ## 16. Alur kerja dan handoff modeling
 
-Alur lengkap proyek klasifikasi risiko PM2.5:
-
 ```text
-Dataset kualitas udara
+Dataset kualitas udara            [selesai]
         ↓
-Pemeriksaan data
+Pemeriksaan data                  [selesai]
         ↓
-EDA
+EDA                               [selesai]
         ↓
-Preprocessing
+Preprocessing                     [selesai]
         ↓
-Feature engineering
+Feature engineering               [selesai]
         ↓
-Menentukan target klasifikasi
+Menentukan target klasifikasi     [selesai]
         ↓
-Split data berbasis waktu
+Split data berbasis waktu         [selesai, sudah diperbaiki]
         ↓
-HANDOFF KE TAHAP MODELING
+Encoding target                   [selesai]
         ↓
-Encoding target
+Penanganan imbalance              [selesai]
         ↓
-Penanganan imbalance
+Training model                    [selesai]
         ↓
-Training model
+Evaluasi model                    [selesai]
         ↓
-Evaluasi model
+Pemilihan model terbaik           [selesai]
         ↓
-Pemilihan model terbaik
-        ↓
-Penyimpanan hasil untuk dashboard
+Penyimpanan hasil untuk dashboard [belum]
 ```
 
-### 16.1 Pekerjaan yang sudah selesai
+### 16.1 Pembagian data yang digunakan
 
-- Dataset kualitas udara Pulau Jawa berhasil dibaca.
-- Missing value dan duplikasi wilayah-tanggal telah diperiksa.
-- EDA distribusi, korelasi, tren, dan distribusi risiko telah dilakukan.
-- Fitur lag PM2.5 telah tersedia.
-- Fitur rolling PM2.5 telah tersedia.
-- Fitur kalender dibuat pada notebook modeling.
-- Target klasifikasi `kategori_target_pm2_5` telah ditentukan.
-- Fitur dan target telah dipisahkan menjadi `X` dan `y`.
-- Data telah dibagi berdasarkan waktu menjadi train, validation, dan test.
+| Subset | Periode | Jumlah baris |
+|---|---|---:|
+| Train | 2022-08-18 sampai 2024-12-31 | 103.173 |
+| Validation | 2025-01-01 sampai 2025-12-31 | 43.435 |
+| Test | 2026-01-01 sampai 2026-10-21 | 34.986 |
 
-### 16.2 Pembagian data yang digunakan
+### 16.2 Batasan untuk tahap berikutnya
 
-| Subset | Periode | Fungsi |
-|---|---|---|
-| Train | 2022-08-18 sampai 2024-12-31 | Melatih model |
-| Validation | 2025-01-01 sampai 2025-12-31 | Memilih model dan tuning |
-| Test | 2026-01-01 sampai 2026-10-21 | Evaluasi akhir |
-
-Variabel hasil split yang tersedia:
-
-```python
-X_train, y_train
-X_val, y_val
-X_test, y_test
-```
-
-### 16.3 Pekerjaan yang belum dilakukan
-
-Tahap berikutnya menjadi tanggung jawab modeling:
-
-- Encoding label target.
-- Pemeriksaan distribusi kelas pada setiap subset.
-- Pembuatan baseline.
-- Training model tanpa balancing.
-- Training model dengan class weight.
-- Eksperimen SMOTE hanya pada data train.
-- Feature selection jika diperlukan.
-- Training LightGBM Classifier.
-- Training Extra Trees Classifier.
-- Training HistGradientBoosting Classifier.
-- Evaluasi precision, recall, F1-score, macro F1, balanced accuracy, dan confusion matrix.
-- Pemilihan model terbaik berdasarkan validation.
-- Evaluasi final satu kali pada data test.
-- Penyimpanan prediksi, metrik, dan feature importance untuk dashboard.
-
-### 16.4 Batasan penting untuk tahap modeling
-
-- Jangan menggunakan random train-test split.
+- Jangan memakai random train-test split.
 - Jangan menerapkan SMOTE pada validation atau test.
 - Jangan memasukkan `target_pm2_5` atau `kategori_target_pm2_5` ke dalam fitur.
-- Jangan menggunakan informasi dari periode test saat tuning model.
-- Gunakan macro F1 dan recall per kelas, bukan accuracy saja.
-- Perhatikan recall kelas Baik dan Tidak Sehat karena keduanya lebih sedikit dibanding kelas Sedang.
-
-
+- Jangan memakai data test untuk tuning atau pemilihan model.
+- Buat `X` dan `y` dari `df` yang sudah diurutkan. Jangan ubah urutan atau index `df` setelah itu.
+- Laporkan macro F1 dan recall per kelas, bukan accuracy saja.
+- Laporkan distribusi kelas per subset bersama hasil model.
