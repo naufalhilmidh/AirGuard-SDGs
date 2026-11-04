@@ -266,6 +266,18 @@ def tabel_besok():
         t = t.rename(columns={"pm2_5_hari_ini": "pm_ini"})
         t["pm_besok"] = np.nan
         t["perubahan"] = np.nan
+        # peluang dari model (0-100) untuk tiap kategori
+        def _peluang(nama):
+            for k in (f"proba_{nama}", nama):
+                if k in depan.columns:
+                    return depan[k] * 100
+            raise KeyError(f"Kolom peluang untuk '{nama}' tidak ada. Kolom yang tersedia: {list(depan.columns)}")
+
+        t["p_baik"] = _peluang("Baik (Aman)")
+        t["p_sedang"] = _peluang("Sedang (Waspada)")
+        t["p_tidak"] = _peluang("Tidak Sehat (Bahaya)")
+        # peluang untuk kategori yang diprediksi (seberapa yakin model)
+        t["p_status"] = t[["p_baik", "p_sedang", "p_tidak"]].to_numpy()[np.arange(len(t)), t["status"].to_numpy()]
         akhir = t["tanggal_input"].max()
         besok = t["tanggal_prediksi"].max()
         if "wind_speed_10m" in pre.columns:
@@ -376,3 +388,12 @@ def muat_proyeksi():
     })
     f["provinsi"] = f["kota"].map(PROV_DARI_KOTA)
     return f, "musiman", akhir, tahun
+
+# ---------- Pilihan wilayah bersama (diatur di sidebar app.py, dibaca semua halaman) ----------
+SEMUA_PROV = "Semua provinsi"
+SEMUA_KOTA = "Semua kabupaten/kota"
+
+
+def wilayah_dipilih():
+    """(provinsi, kabupaten/kota) yang dipilih di sidebar."""
+    return st.session_state.get("wil_prov", SEMUA_PROV), st.session_state.get("wil_kota", SEMUA_KOTA)

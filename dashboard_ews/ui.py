@@ -188,6 +188,7 @@ CSS = """
 [data-testid="stSidebar"] .stButton button {background: transparent !important; border: 1px solid #334155 !important; border-radius: 12px !important;}
 [data-testid="stSidebar"] .stButton button p {color: #E2E8F0 !important; font-weight: 600;}
 [data-testid="stSidebar"] .stButton button:hover {background: rgba(255,255,255,.07) !important;}
+[data-testid="stSidebar"] label p, [data-testid="stSidebar"] .stMarkdown p {color: #CBD5E1 !important; font-weight: 500;}
 .stat.gelap {background: #0F172A !important; border-color: #0F172A !important;}
 .stat.gelap .lab, .stat.gelap .ket {color: #94A3B8;}
 .stat.gelap .val {color: #FFFFFF;}

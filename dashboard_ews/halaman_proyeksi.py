@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from data import (BATAS_BAHAYA, EWS, PROVINSI, TIPE, PENDUDUK, cakupan_provinsi, kode_status, kota_terbesar,
-                  muat_data, muat_proyeksi, nama_pendek)
+                    muat_data, muat_proyeksi, nama_pendek, SEMUA_KOTA, SEMUA_PROV, wilayah_dipilih)
 from ui import BIRU, grid, intro, kepala, kotak, pakai_tema, pill, stat
 
 F, METODE, AKHIR, TAHUN = muat_proyeksi()
@@ -27,7 +27,10 @@ kepala(
 @st.cache_data(show_spinner=False, max_entries=64)
 def seri(level, nama):
     kolom = ["pm2_5_prakiraan", "batas_bawah", "batas_atas"]
-    if level == "Provinsi":
+    if level == "Semua":
+        proj = F.groupby("tanggal")[kolom].mean().reset_index()
+        h = PRED[PRED["pm2_5_aktual"].notna()]
+    elif level == "Provinsi":
         proj = F[F["provinsi"] == nama].groupby("tanggal")[kolom].mean().reset_index()
         h = PRED[(PRED["provinsi"] == nama) & PRED["pm2_5_aktual"].notna()]
     else:
@@ -116,14 +119,15 @@ def badan():
     # ---------- tren ----------
     with kotak("tren"):
         st.subheader("Tren PM2.5 jangka panjang")
-        c1, c2, _ = st.columns([1, 1.6, 1.4])
-        level = c1.radio("Lihat per", ["Provinsi", "Kabupaten/kota"], horizontal=True, key="prj_level")
-        if level == "Provinsi":
-            nama = c2.selectbox("Provinsi", [p for p in PROVINSI if p in set(F["provinsi"].astype(str))] or PROVINSI, key="prj_prov")
+        prov_g, kota_g = wilayah_dipilih()
+        if kota_g != SEMUA_KOTA:
+            level, nama, label = "Kabupaten/kota", kota_g, kota_g
+        elif prov_g != SEMUA_PROV:
+            level, nama, label = "Provinsi", prov_g, prov_g
         else:
-            opsi = sorted(F["kota"].unique())
-            nama = c2.selectbox("Kabupaten/kota", opsi, index=opsi.index(kota_terbesar(opsi)), key="prj_kota",
-                                help="Ketik untuk mencari nama.")
+            level, nama, label = "Semua", None, "rata-rata seluruh Pulau Jawa"
+        st.markdown(f'<div class="catatan">Menampilkan: <b>{label}</b>. Ganti wilayah lewat pilihan di sidebar kiri.</div>',
+                    unsafe_allow_html=True)
         proj, riwayat = seri(level, nama)
         st.caption("Garis abu-abu adalah data aktual 120 hari terakhir. Garis biru adalah proyeksi, dengan pita biru muda "
                    "sebagai rentang harian yang wajar (± satu simpangan baku). Garis merah putus-putus adalah batas bahaya. "

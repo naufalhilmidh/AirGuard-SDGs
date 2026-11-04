@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from data import (BATAS_BAHAYA, EWS, PENDUDUK, PROVINSI, WARNA_PROVINSI, faktor_tersedia, kota_terbesar, muat_data,
+from data import (wilayah_dipilih, BATAS_BAHAYA, EWS, PENDUDUK, PROVINSI, WARNA_PROVINSI, faktor_tersedia, kota_terbesar, muat_data,
                   muat_klaster)
 from ui import BIRU, grid, intro, kepala, kotak, pakai_tema, stat
 
@@ -201,8 +201,8 @@ def tab_evaluasi(prov):
         tabel = pd.DataFrame({
             "Kategori": [s["nama"] for s in EWS],
             "Jumlah aktual": cm.sum(axis=1),
-            "Recall": recall,
-            "Precision": precision,
+            "Recall": recall * 100,
+            "Precision": precision * 100,
             "F1": f1,
         })
         st.dataframe(tabel, hide_index=True, column_config={
@@ -380,7 +380,8 @@ def tab_evaluasi(prov):
 def tab_tren(prov):
     if MODE_KATEGORI:
         daftar = PRED["kota"].astype(str).unique() if prov == SEMUA else PRED.loc[PRED["provinsi"] == prov, "kota"].astype(str).unique()
-        nama = st.selectbox("Kabupaten/kota", sorted(daftar), key=f"an_kota_kategori_{prov}")
+        kota_g = wilayah_dipilih()[1]
+        nama = kota_g if kota_g in set(daftar) else kota_terbesar(sorted(daftar))
         d = PRED[PRED["kota"].astype(str) == nama].sort_values("tanggal_prediksi").copy()
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=d["tanggal_prediksi"], y=d["st_aktual"], mode="lines",
@@ -555,8 +556,9 @@ kepala(
     ({"contoh": ["Sumber: data contoh (sintetis)"], "baseline": ["Data asli", "Prediksi: baseline persistence"],
       "tim": ["Sumber: file hasil tim"]}[SUMBER]) + [f"Data uji: {LABEL_UJI}", f"{ev0['n']:,} pasangan".replace(",", ".")],
 )
-c1, _ = st.columns([1, 3])
-prov = c1.selectbox("Cakupan analisis", [SEMUA, *PROVINSI], key="an_prov")
+
+prov = wilayah_dipilih()[0]
+st.caption(f"Cakupan analisis: {prov}. Ganti lewat pilihan wilayah di sidebar kiri.")
 
 ev = None if MODE_KATEGORI else evaluasi(prov)
 with kotak("temuan"):

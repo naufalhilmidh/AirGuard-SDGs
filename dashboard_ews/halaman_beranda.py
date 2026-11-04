@@ -20,22 +20,24 @@ def panel_pratinjau():
         f'<div class="l"><span class="t" style="background:{s["warna"]}"></span>{s["sebutan"]}</div></div>'
         for s in EWS)
     mode_kategori = TB["pm_besok"].isna().all()
-    atas = (TB.sort_values("status", ascending=False).head(4)
-            if mode_kategori else TB.sort_values("pm_besok", ascending=False).head(4))
-    mx = max(float(atas["pm_besok"].max()), 1.0) if not mode_kategori else 1.0
     if mode_kategori:
+        atas = TB.sort_values("p_tidak", ascending=False).head(4)
         baris = "".join(
-            f'<div class="bar"><span>{x.nama}</span><div class="tr"><i style="width:70%;'
-            f'background:{EWS[x.status]["warna"]}"></i></div><b>{EWS[x.status]["nama"]}</b></div>'
+            f'<div class="bar"><span>{x.nama}</span><div class="tr"><i style="width:{x.p_tidak:.0f}%;'
+            f'background:{EWS[2]["warna"]}"></i></div><b>{x.p_tidak:.0f}%</b></div>'
             for x in atas.itertuples())
+        judul = "Peluang Tidak sehat tertinggi besok"
     else:
+        atas = TB.sort_values("pm_besok", ascending=False).head(4)
+        mx = max(float(atas["pm_besok"].max()), 1.0)
         baris = "".join(
             f'<div class="bar"><span>{x.nama}</span><div class="tr"><i style="width:{x.pm_besok / mx * 100:.0f}%;'
             f'background:{EWS[x.status]["warna"]}"></i></div><b>{x.pm_besok:.0f}</b></div>'
             for x in atas.itertuples())
+        judul = "Prediksi PM2.5 tertinggi (µg/m³)"
     return (f'<div class="panel"><div class="ph"><span>Prediksi untuk {BESOK:%d %b %Y}</span>'
             f'<span>{len(TB)} kabupaten/kota</span></div><div class="tiga">{tiga}</div>'
-            f'<div class="judulp">Prediksi PM2.5 tertinggi (µg/m³)</div>{baris}</div>')
+            f'<div class="judulp">{judul}</div>{baris}</div>')
 
 
 with st.container(key="hero"):
@@ -44,7 +46,7 @@ with st.container(key="hero"):
         st.markdown(
             '<div class="eyebrow">SDG 3 · SDG 11 · SDG 13</div>'
             "<h1>Tahu kualitas udara besok, sebelum polusi datang.</h1>"
-            f'<p class="lead">Prediksi PM2.5 harian dan peringatan dini kesehatan untuk {r["n_kota"]} kabupaten/kota di '
+            f'<p class="lead">Prediksi status kualitas udara harian dan peringatan dini kesehatan untuk {r["n_kota"]} kabupaten/kota di '
             f'Pulau Jawa, mencakup sekitar {r["penduduk_juta"]:.0f} juta penduduk.</p>',
             unsafe_allow_html=True)
         b1, _ = st.columns([1.3, 1])
