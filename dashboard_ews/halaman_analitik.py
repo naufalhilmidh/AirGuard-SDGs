@@ -12,6 +12,7 @@ PRED, PRE, METRIK, FITUR, SUMBER, _ = muat_data()
 CUACA = faktor_tersedia(PRE.columns)  # cuaca dan polutan lain yang ada di data
 KLASTER = muat_klaster()
 BASELINE = SUMBER == "baseline"
+MODE_KATEGORI = bool(PRED.attrs.get("mode_kategori", False))
 
 # Evaluasi memakai data uji (holdout) sesuai pembagian waktu tim: latih 2022-2024, validasi 2025, uji sejak 1 Jan 2026.
 # Kalau data uji tidak cukup (misalnya data contoh), seluruh pasangan prediksi-aktual dipakai.
@@ -179,6 +180,41 @@ def episode(d, ambang):
 # ====================== tab 1: evaluasi model ======================
 @st.fragment
 def tab_evaluasi(prov):
+    if MODE_KATEGORI:
+        d = EVAL if prov == SEMUA else EVAL[EVAL["provinsi"] == prov]
+        d = d.dropna(subset=["st_aktual", "st_prediksi"])
+        cm = np.zeros((3, 3), dtype=int)
+        if not d.empty:
+            np.add.at(cm, (d["st_aktual"].astype(int), d["st_prediksi"].astype(int)), 1)
+        benar = np.trace(cm)
+        total = cm.sum()
+        recall = np.divide(np.diag(cm), cm.sum(axis=1), out=np.full(3, np.nan), where=cm.sum(axis=1) > 0)
+        precision = np.divide(np.diag(cm), cm.sum(axis=0), out=np.full(3, np.nan), where=cm.sum(axis=0) > 0)
+        f1 = 2 * precision * recall / (precision + recall)
+        st.subheader("Evaluasi kategori risiko PM2.5")
+        st.info("Model tim menghasilkan kategori risiko, bukan angka PM2.5 prediksi. Karena itu evaluasi numerik MAE, RMSE, dan R² tidak ditampilkan.")
+        grid("g4",
+             stat("Akurasi kategori", f"{benar / total * 100:.1f}%" if total else "–", "prediksi tepat", "target", gelap=True),
+             stat("Macro F1", f"{np.nanmean(f1):.3f}" if not np.isnan(f1).all() else "–", "rata-rata tiga kategori", "grafik"),
+             stat("Recall Tidak sehat", f"{recall[2] * 100:.1f}%" if not np.isnan(recall[2]) else "–", "peringatan bahaya terdeteksi", "awas"),
+             stat("Data evaluasi", f"{total:,}".replace(",", "."), "observasi", "pin"))
+        tabel = pd.DataFrame({
+            "Kategori": [s["nama"] for s in EWS],
+            "Jumlah aktual": cm.sum(axis=1),
+            "Recall": recall,
+            "Precision": precision,
+            "F1": f1,
+        })
+        st.dataframe(tabel, hide_index=True, column_config={
+            "Recall": st.column_config.NumberColumn(format="%.1f%%"),
+            "Precision": st.column_config.NumberColumn(format="%.1f%%"),
+            "F1": st.column_config.NumberColumn(format="%.3f"),
+        })
+        st.subheader("Confusion matrix kategori")
+        st.dataframe(pd.DataFrame(cm, index=[f"Aktual: {s['nama']}" for s in EWS],
+                                  columns=[f"Prediksi: {s['nama']}" for s in EWS]))
+        return
+
     ev = evaluasi(prov)
     with st.expander("Arti istilah di halaman ini"):
         st.markdown(
@@ -342,6 +378,22 @@ def tab_evaluasi(prov):
 # ====================== tab 2: tren dan episode ======================
 @st.fragment
 def tab_tren(prov):
+    if MODE_KATEGORI:
+        daftar = PRED["kota"].astype(str).unique() if prov == SEMUA else PRED.loc[PRED["provinsi"] == prov, "kota"].astype(str).unique()
+        nama = st.selectbox("Kabupaten/kota", sorted(daftar), key=f"an_kota_kategori_{prov}")
+        d = PRED[PRED["kota"].astype(str) == nama].sort_values("tanggal_prediksi").copy()
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=d["tanggal_prediksi"], y=d["st_aktual"], mode="lines",
+                                 name="Aktual", line=dict(color=BIRU, width=2)))
+        fig.add_trace(go.Scatter(x=d["tanggal_prediksi"], y=d["st_prediksi"], mode="lines",
+                                 name="Prediksi", line=dict(color="#F97316", width=1.6, dash="dash")))
+        fig.update_yaxes(title="Kategori risiko", tickvals=[0, 1, 2], ticktext=["Baik", "Sedang", "Tidak Sehat"])
+        fig.update_xaxes(title="Tanggal target")
+        st.subheader(f"Aktual vs prediksi kategori risiko, {nama}")
+        st.caption("Garis prediksi menunjukkan kategori risiko hari berikutnya. Perbedaan garis menandakan kesalahan klasifikasi.")
+        st.plotly_chart(pakai_tema(fig, 400))
+        return
+
     ada = PRED["kota"].astype(str).unique() if prov == SEMUA else PRED.loc[PRED["provinsi"] == prov, "kota"].astype(str).unique()
     daftar = sorted(ada)
     f0, f1, f2, _ = st.columns([1.7, 1.5, 1.1, 0.4], gap="large")
@@ -493,7 +545,10 @@ def tab_klaster(prov):
 
 
 # ====================== halaman ======================
-ev0 = evaluasi(SEMUA)
+if MODE_KATEGORI:
+    ev0 = {"n": int(len(EVAL))}
+else:
+    ev0 = evaluasi(SEMUA)
 kepala(
     "Analitik dan evaluasi",
     "Untuk dosen dan tim peneliti: seberapa akurat model, di mana ia lemah, dan pola apa yang terlihat di data.",
@@ -503,11 +558,27 @@ kepala(
 c1, _ = st.columns([1, 3])
 prov = c1.selectbox("Cakupan analisis", [SEMUA, *PROVINSI], key="an_prov")
 
-ev = evaluasi(prov)
+ev = None if MODE_KATEGORI else evaluasi(prov)
 with kotak("temuan"):
     st.subheader("Temuan utama")
     st.caption("Ringkasan yang dihitung otomatis dari data untuk cakupan yang dipilih. Perlu dicek dan ditafsirkan oleh peneliti.")
-    st.markdown('<ul class="rek">' + "".join(f"<li>{x}</li>" for x in temuan(ev, prov)) + "</ul>", unsafe_allow_html=True)
+    if MODE_KATEGORI:
+        d_temuan = EVAL if prov == SEMUA else EVAL[EVAL["provinsi"] == prov]
+        d_temuan = d_temuan.dropna(subset=["st_aktual", "st_prediksi"])
+        benar_temuan = int((d_temuan["st_aktual"] == d_temuan["st_prediksi"]).sum())
+        total_temuan = len(d_temuan)
+        recall_bahaya = np.nan
+        bahaya = d_temuan["st_aktual"] == 2
+        if bahaya.sum():
+            recall_bahaya = (d_temuan.loc[bahaya, "st_prediksi"] == 2).mean() * 100
+        teks = [
+            f"Akurasi kategori pada cakupan ini: <b>{benar_temuan / total_temuan * 100:.1f}%</b> ({total_temuan} observasi)." if total_temuan else "Belum ada data evaluasi untuk cakupan ini.",
+            "Model yang digunakan menghasilkan kategori risiko, sehingga MAE, RMSE, dan R² tidak ditampilkan.",
+            f"Recall status Tidak sehat: <b>{recall_bahaya:.1f}%</b>." if not np.isnan(recall_bahaya) else "Tidak ada observasi berstatus Tidak sehat pada cakupan ini.",
+        ]
+        st.markdown('<ul class="rek">' + "".join(f"<li>{x}</li>" for x in teks) + "</ul>", unsafe_allow_html=True)
+    else:
+        st.markdown('<ul class="rek">' + "".join(f"<li>{x}</li>" for x in temuan(ev, prov)) + "</ul>", unsafe_allow_html=True)
 
 nama_tab = ["Evaluasi model", "Tren & episode", "Faktor & musim"] + (["Klaster wilayah"] if KLASTER is not None else [])
 tabs = st.tabs(nama_tab, key="tab_analitik", on_change="rerun")

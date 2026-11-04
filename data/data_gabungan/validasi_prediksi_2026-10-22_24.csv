@@ -1,0 +1,348 @@
+kode_kabkota,nama_kabkota,provinsi,tanggal_input,tanggal_prediksi,pm2_5_input,pm2_5_aktual,kategori_prediksi,kategori_aktual,benar
+31.01,Kabupaten Administrasi Kepulauan Seribu,DKI Jakarta,2026-10-21,2026-10-22,24.6125,25.070833333333336,Sedang (Waspada),Sedang (Waspada),True
+31.01,Kabupaten Administrasi Kepulauan Seribu,DKI Jakarta,2026-10-22,2026-10-23,25.070833333333336,29.370833333333334,Sedang (Waspada),Sedang (Waspada),True
+31.01,Kabupaten Administrasi Kepulauan Seribu,DKI Jakarta,2026-10-23,2026-10-24,29.370833333333334,29.40833333333333,Sedang (Waspada),Sedang (Waspada),True
+31.71,Kota Administrasi Jakarta Pusat,DKI Jakarta,2026-10-21,2026-10-22,48.57916666666667,45.17916666666667,Tidak Sehat (Bahaya),Sedang (Waspada),False
+31.71,Kota Administrasi Jakarta Pusat,DKI Jakarta,2026-10-22,2026-10-23,45.17916666666667,57.02916666666667,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+31.71,Kota Administrasi Jakarta Pusat,DKI Jakarta,2026-10-23,2026-10-24,57.02916666666667,64.44583333333334,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+31.72,Kota Administrasi Jakarta Utara,DKI Jakarta,2026-10-21,2026-10-22,48.57916666666667,45.17916666666667,Tidak Sehat (Bahaya),Sedang (Waspada),False
+31.72,Kota Administrasi Jakarta Utara ,DKI Jakarta,2026-10-22,2026-10-23,45.17916666666667,57.02916666666667,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+31.72,Kota Administrasi Jakarta Utara ,DKI Jakarta,2026-10-23,2026-10-24,57.02916666666667,64.44583333333334,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+31.73,Kota Administrasi Jakarta Barat,DKI Jakarta,2026-10-21,2026-10-22,48.57916666666667,45.17916666666667,Tidak Sehat (Bahaya),Sedang (Waspada),False
+31.73,Kota Administrasi Jakarta Barat,DKI Jakarta,2026-10-22,2026-10-23,45.17916666666667,57.02916666666667,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+31.73,Kota Administrasi Jakarta Barat,DKI Jakarta,2026-10-23,2026-10-24,57.02916666666667,64.44583333333334,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+31.74,Kota Administrasi Jakarta Selatan,DKI Jakarta,2026-10-21,2026-10-22,112.87083333333334,111.59166666666665,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+31.74,Kota Administrasi Jakarta Selatan,DKI Jakarta,2026-10-22,2026-10-23,111.59166666666665,102.125,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+31.74,Kota Administrasi Jakarta Selatan,DKI Jakarta,2026-10-23,2026-10-24,102.125,99.45833333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+31.75,Kota Administrasi Jakarta Timur,DKI Jakarta,2026-10-21,2026-10-22,112.87083333333334,111.59166666666665,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+31.75,Kota Administrasi Jakarta Timur,DKI Jakarta,2026-10-22,2026-10-23,111.59166666666665,102.125,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+31.75,Kota Administrasi Jakarta Timur,DKI Jakarta,2026-10-23,2026-10-24,102.125,99.45833333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.01,Kabupaten Bogor,Jawa Barat,2026-10-21,2026-10-22,112.87083333333334,111.59166666666665,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.01,Kabupaten Bogor,Jawa Barat,2026-10-22,2026-10-23,111.59166666666665,102.125,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.01,Kabupaten Bogor,Jawa Barat,2026-10-23,2026-10-24,102.125,99.45833333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.02,Kabupaten Sukabumi,Jawa Barat,2026-10-21,2026-10-22,37.74583333333333,32.6,Sedang (Waspada),Sedang (Waspada),True
+32.02,Kabupaten Sukabumi,Jawa Barat,2026-10-22,2026-10-23,32.6,21.491666666666664,Sedang (Waspada),Sedang (Waspada),True
+32.02,Kabupaten Sukabumi,Jawa Barat,2026-10-23,2026-10-24,21.491666666666664,21.05,Sedang (Waspada),Sedang (Waspada),True
+32.03,Kabupaten Cianjur,Jawa Barat,2026-10-21,2026-10-22,81.52083333333333,75.15416666666667,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.03,Kabupaten Cianjur,Jawa Barat,2026-10-22,2026-10-23,75.15416666666667,56.15833333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.03,Kabupaten Cianjur,Jawa Barat,2026-10-23,2026-10-24,56.15833333333333,57.69583333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.04,Kabupaten Bandung,Jawa Barat,2026-10-21,2026-10-22,25.45833333333333,27.900000000000002,Sedang (Waspada),Sedang (Waspada),True
+32.04,Kabupaten Bandung,Jawa Barat,2026-10-22,2026-10-23,27.900000000000002,17.670833333333334,Sedang (Waspada),Sedang (Waspada),True
+32.04,Kabupaten Bandung,Jawa Barat,2026-10-23,2026-10-24,17.670833333333334,13.475,Sedang (Waspada),Baik (Aman),False
+32.05,Kabupaten Garut,Jawa Barat,2026-10-21,2026-10-22,26.05,32.725,Sedang (Waspada),Sedang (Waspada),True
+32.05,Kabupaten Garut,Jawa Barat,2026-10-22,2026-10-23,32.725,26.474999999999998,Sedang (Waspada),Sedang (Waspada),True
+32.05,Kabupaten Garut,Jawa Barat,2026-10-23,2026-10-24,26.474999999999998,18.295833333333334,Sedang (Waspada),Sedang (Waspada),True
+32.06,Kabupaten Tasikmalaya,Jawa Barat,2026-10-21,2026-10-22,26.05,32.725,Sedang (Waspada),Sedang (Waspada),True
+32.06,Kabupaten Tasikmalaya,Jawa Barat,2026-10-22,2026-10-23,32.725,26.474999999999998,Sedang (Waspada),Sedang (Waspada),True
+32.06,Kabupaten Tasikmalaya,Jawa Barat,2026-10-23,2026-10-24,26.474999999999998,18.295833333333334,Sedang (Waspada),Sedang (Waspada),True
+32.07,Kabupaten Ciamis,Jawa Barat,2026-10-21,2026-10-22,29.725,35.65416666666667,Sedang (Waspada),Sedang (Waspada),True
+32.07,Kabupaten Ciamis,Jawa Barat,2026-10-22,2026-10-23,35.65416666666667,29.395833333333332,Sedang (Waspada),Sedang (Waspada),True
+32.07,Kabupaten Ciamis,Jawa Barat,2026-10-23,2026-10-24,29.395833333333332,22.3625,Sedang (Waspada),Sedang (Waspada),True
+32.08,Kabupaten Kuningan,Jawa Barat,2026-10-21,2026-10-22,22.6875,26.183333333333334,Sedang (Waspada),Sedang (Waspada),True
+32.08,Kabupaten Kuningan,Jawa Barat,2026-10-22,2026-10-23,26.183333333333334,18.429166666666667,Sedang (Waspada),Sedang (Waspada),True
+32.08,Kabupaten Kuningan,Jawa Barat,2026-10-23,2026-10-24,18.429166666666667,17.066666666666666,Sedang (Waspada),Sedang (Waspada),True
+32.09,Kabupaten Cirebon,Jawa Barat,2026-10-21,2026-10-22,22.6875,26.183333333333334,Sedang (Waspada),Sedang (Waspada),True
+32.09,Kabupaten Cirebon,Jawa Barat,2026-10-22,2026-10-23,26.183333333333334,18.429166666666667,Sedang (Waspada),Sedang (Waspada),True
+32.09,Kabupaten Cirebon,Jawa Barat,2026-10-23,2026-10-24,18.429166666666667,17.066666666666666,Sedang (Waspada),Sedang (Waspada),True
+32.1,Kabupaten Majalengka,Jawa Barat,2026-10-21,2026-10-22,22.6875,,Sedang (Waspada),,False
+32.11,Kabupaten Sumedang,Jawa Barat,2026-10-21,2026-10-22,49.03333333333333,45.9625,Tidak Sehat (Bahaya),Sedang (Waspada),False
+32.11,Kabupaten Sumedang,Jawa Barat,2026-10-22,2026-10-23,45.9625,33.69583333333333,Sedang (Waspada),Sedang (Waspada),True
+32.11,Kabupaten Sumedang,Jawa Barat,2026-10-23,2026-10-24,33.69583333333333,27.52916666666667,Sedang (Waspada),Sedang (Waspada),True
+32.12,Kabupaten Indramayu,Jawa Barat,2026-10-21,2026-10-22,21.695833333333336,29.7,Sedang (Waspada),Sedang (Waspada),True
+32.12,Kabupaten Indramayu,Jawa Barat,2026-10-22,2026-10-23,29.7,18.625,Sedang (Waspada),Sedang (Waspada),True
+32.12,Kabupaten Indramayu,Jawa Barat,2026-10-23,2026-10-24,18.625,17.529166666666665,Sedang (Waspada),Sedang (Waspada),True
+32.13,Kabupaten Subang,Jawa Barat,2026-10-21,2026-10-22,106.55833333333334,98.94583333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.13,Kabupaten Subang,Jawa Barat,2026-10-22,2026-10-23,98.94583333333333,84.925,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.13,Kabupaten Subang,Jawa Barat,2026-10-23,2026-10-24,84.925,92.32083333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.14,Kabupaten Purwakarta,Jawa Barat,2026-10-21,2026-10-22,106.55833333333334,98.94583333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.14,Kabupaten Purwakarta,Jawa Barat,2026-10-22,2026-10-23,98.94583333333333,84.925,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.14,Kabupaten Purwakarta,Jawa Barat,2026-10-23,2026-10-24,84.925,92.32083333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.15,Kabupaten Karawang,Jawa Barat,2026-10-21,2026-10-22,134.02083333333334,123.92916666666667,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.15,Kabupaten Karawang,Jawa Barat,2026-10-22,2026-10-23,123.92916666666667,116.9375,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.15,Kabupaten Karawang,Jawa Barat,2026-10-23,2026-10-24,116.9375,108.07083333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.16,Kabupaten Bekasi,Jawa Barat,2026-10-21,2026-10-22,134.02083333333334,123.92916666666667,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.16,Kabupaten Bekasi,Jawa Barat,2026-10-22,2026-10-23,123.92916666666667,116.9375,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.16,Kabupaten Bekasi,Jawa Barat,2026-10-23,2026-10-24,116.9375,108.07083333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.17,Kabupaten Bandung Barat,Jawa Barat,2026-10-21,2026-10-22,89.12083333333334,81.87916666666666,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.17,Kabupaten Bandung Barat,Jawa Barat,2026-10-22,2026-10-23,81.87916666666666,80.8125,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.17,Kabupaten Bandung Barat,Jawa Barat,2026-10-23,2026-10-24,80.8125,86.22083333333335,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.18,Kabupaten Pangandaran,Jawa Barat,2026-10-21,2026-10-22,32.891666666666666,37.80416666666667,Sedang (Waspada),Sedang (Waspada),True
+32.18,Kabupaten Pangandaran,Jawa Barat,2026-10-22,2026-10-23,37.80416666666667,28.75,Sedang (Waspada),Sedang (Waspada),True
+32.18,Kabupaten Pangandaran,Jawa Barat,2026-10-23,2026-10-24,28.75,20.908333333333335,Sedang (Waspada),Sedang (Waspada),True
+32.71,Kota Bogor,Jawa Barat,2026-10-21,2026-10-22,112.87083333333334,111.59166666666665,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.71,Kota Bogor,Jawa Barat,2026-10-22,2026-10-23,111.59166666666665,102.125,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.71,Kota Bogor,Jawa Barat,2026-10-23,2026-10-24,102.125,99.45833333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.72,Kota Sukabumi,Jawa Barat,2026-10-21,2026-10-22,59.5125,60.24583333333334,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.72,Kota Sukabumi,Jawa Barat,2026-10-22,2026-10-23,60.24583333333334,34.47083333333333,Tidak Sehat (Bahaya),Sedang (Waspada),False
+32.72,Kota Sukabumi,Jawa Barat,2026-10-23,2026-10-24,34.47083333333333,33.96666666666667,Sedang (Waspada),Sedang (Waspada),True
+32.73,Kota Bandung,Jawa Barat,2026-10-21,2026-10-22,89.12083333333334,81.87916666666666,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.73,Kota Bandung,Jawa Barat,2026-10-22,2026-10-23,81.87916666666666,80.8125,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.73,Kota Bandung,Jawa Barat,2026-10-23,2026-10-24,80.8125,86.22083333333335,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.74,Kota Cirebon,Jawa Barat,2026-10-21,2026-10-22,22.6875,26.183333333333334,Sedang (Waspada),Sedang (Waspada),True
+32.74,Kota Cirebon,Jawa Barat,2026-10-22,2026-10-23,26.183333333333334,18.429166666666667,Sedang (Waspada),Sedang (Waspada),True
+32.74,Kota Cirebon,Jawa Barat,2026-10-23,2026-10-24,18.429166666666667,17.066666666666666,Sedang (Waspada),Sedang (Waspada),True
+32.75,Kota Bekasi,Jawa Barat,2026-10-21,2026-10-22,112.87083333333334,111.59166666666665,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.75,Kota Bekasi,Jawa Barat,2026-10-22,2026-10-23,111.59166666666665,102.125,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.75,Kota Bekasi,Jawa Barat,2026-10-23,2026-10-24,102.125,99.45833333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.76,Kota Depok,Jawa Barat,2026-10-21,2026-10-22,112.87083333333334,111.59166666666665,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.76,Kota Depok,Jawa Barat,2026-10-22,2026-10-23,111.59166666666665,102.125,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.76,Kota Depok,Jawa Barat,2026-10-23,2026-10-24,102.125,99.45833333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.77,Kota Cimahi,Jawa Barat,2026-10-21,2026-10-22,89.12083333333334,81.87916666666666,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.77,Kota Cimahi,Jawa Barat,2026-10-22,2026-10-23,81.87916666666666,80.8125,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.77,Kota Cimahi,Jawa Barat,2026-10-23,2026-10-24,80.8125,86.22083333333335,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+32.78,Kota Tasikmalaya,Jawa Barat,2026-10-21,2026-10-22,26.05,32.725,Sedang (Waspada),Sedang (Waspada),True
+32.78,Kota Tasikmalaya,Jawa Barat,2026-10-22,2026-10-23,32.725,26.474999999999998,Sedang (Waspada),Sedang (Waspada),True
+32.78,Kota Tasikmalaya,Jawa Barat,2026-10-23,2026-10-24,26.474999999999998,18.295833333333334,Sedang (Waspada),Sedang (Waspada),True
+32.79,Kota Banjar,Jawa Barat,2026-10-21,2026-10-22,29.725,35.65416666666667,Sedang (Waspada),Sedang (Waspada),True
+32.79,Kota Banjar,Jawa Barat,2026-10-22,2026-10-23,35.65416666666667,29.395833333333332,Sedang (Waspada),Sedang (Waspada),True
+32.79,Kota Banjar,Jawa Barat,2026-10-23,2026-10-24,29.395833333333332,22.3625,Sedang (Waspada),Sedang (Waspada),True
+33.01,Kabupaten Cilacap,Jawa Tengah,2026-10-21,2026-10-22,31.59583333333333,33.420833333333334,Sedang (Waspada),Sedang (Waspada),True
+33.01,Kabupaten Cilacap,Jawa Tengah,2026-10-22,2026-10-23,33.420833333333334,28.070833333333336,Sedang (Waspada),Sedang (Waspada),True
+33.01,Kabupaten Cilacap,Jawa Tengah,2026-10-23,2026-10-24,28.070833333333336,24.075,Sedang (Waspada),Sedang (Waspada),True
+33.02,Kabupaten Banyumas,Jawa Tengah,2026-10-21,2026-10-22,31.59583333333333,33.420833333333334,Sedang (Waspada),Sedang (Waspada),True
+33.02,Kabupaten Banyumas,Jawa Tengah,2026-10-22,2026-10-23,33.420833333333334,28.070833333333336,Sedang (Waspada),Sedang (Waspada),True
+33.02,Kabupaten Banyumas,Jawa Tengah,2026-10-23,2026-10-24,28.070833333333336,24.075,Sedang (Waspada),Sedang (Waspada),True
+33.03,Kabupaten Purbalingga,Jawa Tengah,2026-10-21,2026-10-22,34.975,36.37916666666667,Sedang (Waspada),Sedang (Waspada),True
+33.03,Kabupaten Purbalingga,Jawa Tengah,2026-10-22,2026-10-23,36.37916666666667,33.4,Sedang (Waspada),Sedang (Waspada),True
+33.03,Kabupaten Purbalingga,Jawa Tengah,2026-10-23,2026-10-24,33.4,24.004166666666666,Sedang (Waspada),Sedang (Waspada),True
+33.04,Kabupaten Banjarnegara,Jawa Tengah,2026-10-21,2026-10-22,33.8375,31.849999999999998,Sedang (Waspada),Sedang (Waspada),True
+33.04,Kabupaten Banjarnegara,Jawa Tengah,2026-10-22,2026-10-23,31.849999999999998,23.72083333333333,Sedang (Waspada),Sedang (Waspada),True
+33.04,Kabupaten Banjarnegara,Jawa Tengah,2026-10-23,2026-10-24,23.72083333333333,20.045833333333334,Sedang (Waspada),Sedang (Waspada),True
+33.05,Kabupaten Kebumen,Jawa Tengah,2026-10-21,2026-10-22,45.54166666666666,43.37916666666666,Sedang (Waspada),Sedang (Waspada),True
+33.05,Kabupaten Kebumen,Jawa Tengah,2026-10-22,2026-10-23,43.37916666666666,40.35,Sedang (Waspada),Sedang (Waspada),True
+33.05,Kabupaten Kebumen,Jawa Tengah,2026-10-23,2026-10-24,40.35,32.99583333333333,Sedang (Waspada),Sedang (Waspada),True
+33.06,Kabupaten Purworejo,Jawa Tengah,2026-10-21,2026-10-22,39.3375,39.083333333333336,Sedang (Waspada),Sedang (Waspada),True
+33.06,Kabupaten Purworejo,Jawa Tengah,2026-10-22,2026-10-23,39.083333333333336,29.808333333333334,Sedang (Waspada),Sedang (Waspada),True
+33.06,Kabupaten Purworejo,Jawa Tengah,2026-10-23,2026-10-24,29.808333333333334,27.629166666666666,Sedang (Waspada),Sedang (Waspada),True
+33.07,Kabupaten Wonosobo,Jawa Tengah,2026-10-21,2026-10-22,45.5125,41.95,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.07,Kabupaten Wonosobo,Jawa Tengah,2026-10-22,2026-10-23,41.95,25.775000000000002,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.07,Kabupaten Wonosobo,Jawa Tengah,2026-10-23,2026-10-24,25.775000000000002,22.195833333333336,Sedang (Waspada),Sedang (Waspada),True
+33.08,Kabupaten Magelang,Jawa Tengah,2026-10-21,2026-10-22,25.47083333333333,30.458333333333332,Sedang (Waspada),Sedang (Waspada),True
+33.08,Kabupaten Magelang,Jawa Tengah,2026-10-22,2026-10-23,30.458333333333332,24.829166666666666,Sedang (Waspada),Sedang (Waspada),True
+33.08,Kabupaten Magelang,Jawa Tengah,2026-10-23,2026-10-24,24.829166666666666,22.933333333333334,Sedang (Waspada),Sedang (Waspada),True
+33.09,Kabupaten Boyolali,Jawa Tengah,2026-10-21,2026-10-22,34.15833333333333,36.112500000000004,Sedang (Waspada),Sedang (Waspada),True
+33.09,Kabupaten Boyolali,Jawa Tengah,2026-10-22,2026-10-23,36.112500000000004,30.183333333333334,Sedang (Waspada),Sedang (Waspada),True
+33.09,Kabupaten Boyolali,Jawa Tengah,2026-10-23,2026-10-24,30.183333333333334,23.020833333333332,Sedang (Waspada),Sedang (Waspada),True
+33.1,Kabupaten Klaten,Jawa Tengah,2026-10-21,2026-10-22,25.47083333333333,,Sedang (Waspada),,False
+33.11,Kabupaten Sukoharjo,Jawa Tengah,2026-10-21,2026-10-22,34.15833333333333,36.112500000000004,Sedang (Waspada),Sedang (Waspada),True
+33.11,Kabupaten Sukoharjo,Jawa Tengah,2026-10-22,2026-10-23,36.112500000000004,30.183333333333334,Sedang (Waspada),Sedang (Waspada),True
+33.11,Kabupaten Sukoharjo,Jawa Tengah,2026-10-23,2026-10-24,30.183333333333334,23.020833333333332,Sedang (Waspada),Sedang (Waspada),True
+33.12,Kabupaten Wonogiri,Jawa Tengah,2026-10-21,2026-10-22,22.941666666666663,29.97083333333333,Sedang (Waspada),Sedang (Waspada),True
+33.12,Kabupaten Wonogiri,Jawa Tengah,2026-10-22,2026-10-23,29.97083333333333,26.4875,Sedang (Waspada),Sedang (Waspada),True
+33.12,Kabupaten Wonogiri,Jawa Tengah,2026-10-23,2026-10-24,26.4875,19.829166666666666,Sedang (Waspada),Sedang (Waspada),True
+33.13,Kabupaten Karanganyar,Jawa Tengah,2026-10-21,2026-10-22,34.15833333333333,36.112500000000004,Sedang (Waspada),Sedang (Waspada),True
+33.13,Kabupaten Karanganyar,Jawa Tengah,2026-10-22,2026-10-23,36.112500000000004,30.183333333333334,Sedang (Waspada),Sedang (Waspada),True
+33.13,Kabupaten Karanganyar,Jawa Tengah,2026-10-23,2026-10-24,30.183333333333334,23.020833333333332,Sedang (Waspada),Sedang (Waspada),True
+33.14,Kabupaten Sragen,Jawa Tengah,2026-10-21,2026-10-22,65.77499999999999,65.31666666666666,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+33.14,Kabupaten Sragen,Jawa Tengah,2026-10-22,2026-10-23,65.31666666666666,51.6,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.14,Kabupaten Sragen,Jawa Tengah,2026-10-23,2026-10-24,51.6,31.883333333333336,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.15,Kabupaten Grobogan,Jawa Tengah,2026-10-21,2026-10-22,52.770833333333336,49.550000000000004,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.15,Kabupaten Grobogan,Jawa Tengah,2026-10-22,2026-10-23,49.550000000000004,42.512499999999996,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.15,Kabupaten Grobogan,Jawa Tengah,2026-10-23,2026-10-24,42.512499999999996,25.037499999999998,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.16,Kabupaten Blora,Jawa Tengah,2026-10-21,2026-10-22,48.3875,50.74583333333334,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.16,Kabupaten Blora,Jawa Tengah,2026-10-22,2026-10-23,50.74583333333334,50.57083333333333,Sedang (Waspada),Sedang (Waspada),True
+33.16,Kabupaten Blora,Jawa Tengah,2026-10-23,2026-10-24,50.57083333333333,55.49583333333334,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+33.17,Kabupaten Rembang,Jawa Tengah,2026-10-21,2026-10-22,61.96666666666667,73.03333333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+33.17,Kabupaten Rembang,Jawa Tengah,2026-10-22,2026-10-23,73.03333333333333,67.0,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+33.17,Kabupaten Rembang,Jawa Tengah,2026-10-23,2026-10-24,67.0,57.59166666666667,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+33.18,Kabupaten Pati,Jawa Tengah,2026-10-21,2026-10-22,61.96666666666667,73.03333333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+33.18,Kabupaten Pati,Jawa Tengah,2026-10-22,2026-10-23,73.03333333333333,67.0,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+33.18,Kabupaten Pati,Jawa Tengah,2026-10-23,2026-10-24,67.0,57.59166666666667,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+33.19,Kabupaten Kudus,Jawa Tengah,2026-10-21,2026-10-22,52.2625,73.75,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+33.19,Kabupaten Kudus,Jawa Tengah,2026-10-22,2026-10-23,73.75,48.729166666666664,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.19,Kabupaten Kudus,Jawa Tengah,2026-10-23,2026-10-24,48.729166666666664,31.620833333333334,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.2,Kabupaten Jepara,Jawa Tengah,2026-10-21,2026-10-22,31.5625,,Sedang (Waspada),,False
+33.21,Kabupaten Demak,Jawa Tengah,2026-10-21,2026-10-22,52.2625,73.75,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+33.21,Kabupaten Demak,Jawa Tengah,2026-10-22,2026-10-23,73.75,48.729166666666664,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.21,Kabupaten Demak,Jawa Tengah,2026-10-23,2026-10-24,48.729166666666664,31.620833333333334,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.22,Kabupaten Semarang,Jawa Tengah,2026-10-21,2026-10-22,58.1875,56.5875,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+33.22,Kabupaten Semarang,Jawa Tengah,2026-10-22,2026-10-23,56.5875,45.40416666666667,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.22,Kabupaten Semarang,Jawa Tengah,2026-10-23,2026-10-24,45.40416666666667,35.94166666666667,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.23,Kabupaten Temanggung,Jawa Tengah,2026-10-21,2026-10-22,45.5125,41.95,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.23,Kabupaten Temanggung,Jawa Tengah,2026-10-22,2026-10-23,41.95,25.775000000000002,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.23,Kabupaten Temanggung,Jawa Tengah,2026-10-23,2026-10-24,25.775000000000002,22.195833333333336,Sedang (Waspada),Sedang (Waspada),True
+33.24,Kabupaten Kendal,Jawa Tengah,2026-10-21,2026-10-22,39.329166666666666,54.77916666666667,Sedang (Waspada),Sedang (Waspada),True
+33.24,Kabupaten Kendal,Jawa Tengah,2026-10-22,2026-10-23,54.77916666666667,34.479166666666664,Sedang (Waspada),Sedang (Waspada),True
+33.24,Kabupaten Kendal,Jawa Tengah,2026-10-23,2026-10-24,34.479166666666664,27.254166666666666,Sedang (Waspada),Sedang (Waspada),True
+33.25,Kabupaten Batang,Jawa Tengah,2026-10-21,2026-10-22,30.39583333333333,46.975,Sedang (Waspada),Sedang (Waspada),True
+33.25,Kabupaten Batang,Jawa Tengah,2026-10-22,2026-10-23,46.975,40.550000000000004,Sedang (Waspada),Sedang (Waspada),True
+33.25,Kabupaten Batang,Jawa Tengah,2026-10-23,2026-10-24,40.550000000000004,29.875,Sedang (Waspada),Sedang (Waspada),True
+33.26,Kabupaten Pekalongan,Jawa Tengah,2026-10-21,2026-10-22,33.8375,31.849999999999998,Sedang (Waspada),Sedang (Waspada),True
+33.26,Kabupaten Pekalongan,Jawa Tengah,2026-10-22,2026-10-23,31.849999999999998,23.72083333333333,Sedang (Waspada),Sedang (Waspada),True
+33.26,Kabupaten Pekalongan,Jawa Tengah,2026-10-23,2026-10-24,23.72083333333333,20.045833333333334,Sedang (Waspada),Sedang (Waspada),True
+33.27,Kabupaten Pemalang,Jawa Tengah,2026-10-21,2026-10-22,26.60833333333333,34.25416666666667,Sedang (Waspada),Sedang (Waspada),True
+33.27,Kabupaten Pemalang,Jawa Tengah,2026-10-22,2026-10-23,34.25416666666667,28.179166666666664,Sedang (Waspada),Sedang (Waspada),True
+33.27,Kabupaten Pemalang,Jawa Tengah,2026-10-23,2026-10-24,28.179166666666664,24.358333333333334,Sedang (Waspada),Sedang (Waspada),True
+33.28,Kabupaten Tegal,Jawa Tengah,2026-10-21,2026-10-22,26.60833333333333,34.25416666666667,Sedang (Waspada),Sedang (Waspada),True
+33.28,Kabupaten Tegal,Jawa Tengah,2026-10-22,2026-10-23,34.25416666666667,28.179166666666664,Sedang (Waspada),Sedang (Waspada),True
+33.28,Kabupaten Tegal,Jawa Tengah,2026-10-23,2026-10-24,28.179166666666664,24.358333333333334,Sedang (Waspada),Sedang (Waspada),True
+33.29,Kabupaten Brebes,Jawa Tengah,2026-10-21,2026-10-22,26.60833333333333,34.25416666666667,Sedang (Waspada),Sedang (Waspada),True
+33.29,Kabupaten Brebes,Jawa Tengah,2026-10-22,2026-10-23,34.25416666666667,28.179166666666664,Sedang (Waspada),Sedang (Waspada),True
+33.29,Kabupaten Brebes,Jawa Tengah,2026-10-23,2026-10-24,28.179166666666664,24.358333333333334,Sedang (Waspada),Sedang (Waspada),True
+33.71,Kota Magelang,Jawa Tengah,2026-10-21,2026-10-22,25.47083333333333,30.458333333333332,Sedang (Waspada),Sedang (Waspada),True
+33.71,Kota Magelang,Jawa Tengah,2026-10-22,2026-10-23,30.458333333333332,24.829166666666666,Sedang (Waspada),Sedang (Waspada),True
+33.71,Kota Magelang,Jawa Tengah,2026-10-23,2026-10-24,24.829166666666666,22.933333333333334,Sedang (Waspada),Sedang (Waspada),True
+33.72,Kota Surakarta,Jawa Tengah,2026-10-21,2026-10-22,34.15833333333333,36.112500000000004,Sedang (Waspada),Sedang (Waspada),True
+33.72,Kota Surakarta,Jawa Tengah,2026-10-22,2026-10-23,36.112500000000004,30.183333333333334,Sedang (Waspada),Sedang (Waspada),True
+33.72,Kota Surakarta,Jawa Tengah,2026-10-23,2026-10-24,30.183333333333334,23.020833333333332,Sedang (Waspada),Sedang (Waspada),True
+33.73,Kota Salatiga,Jawa Tengah,2026-10-21,2026-10-22,58.1875,56.5875,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+33.73,Kota Salatiga,Jawa Tengah,2026-10-22,2026-10-23,56.5875,45.40416666666667,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.73,Kota Salatiga,Jawa Tengah,2026-10-23,2026-10-24,45.40416666666667,35.94166666666667,Tidak Sehat (Bahaya),Sedang (Waspada),False
+33.74,Kota Semarang,Jawa Tengah,2026-10-21,2026-10-22,39.329166666666666,54.77916666666667,Sedang (Waspada),Sedang (Waspada),True
+33.74,Kota Semarang,Jawa Tengah,2026-10-22,2026-10-23,54.77916666666667,34.479166666666664,Sedang (Waspada),Sedang (Waspada),True
+33.74,Kota Semarang,Jawa Tengah,2026-10-23,2026-10-24,34.479166666666664,27.254166666666666,Sedang (Waspada),Sedang (Waspada),True
+33.75,Kota Pekalongan,Jawa Tengah,2026-10-21,2026-10-22,30.39583333333333,46.975,Sedang (Waspada),Sedang (Waspada),True
+33.75,Kota Pekalongan,Jawa Tengah,2026-10-22,2026-10-23,46.975,40.550000000000004,Sedang (Waspada),Sedang (Waspada),True
+33.75,Kota Pekalongan,Jawa Tengah,2026-10-23,2026-10-24,40.550000000000004,29.875,Sedang (Waspada),Sedang (Waspada),True
+33.76,Kota Tegal,Jawa Tengah,2026-10-21,2026-10-22,26.60833333333333,34.25416666666667,Sedang (Waspada),Sedang (Waspada),True
+33.76,Kota Tegal,Jawa Tengah,2026-10-22,2026-10-23,34.25416666666667,28.179166666666664,Sedang (Waspada),Sedang (Waspada),True
+33.76,Kota Tegal,Jawa Tengah,2026-10-23,2026-10-24,28.179166666666664,24.358333333333334,Sedang (Waspada),Sedang (Waspada),True
+34.01,Kabupaten Kulon Progo,DI Yogyakarta,2026-10-21,2026-10-22,31.754166666666663,35.262499999999996,Sedang (Waspada),Sedang (Waspada),True
+34.01,Kabupaten Kulon Progo,DI Yogyakarta,2026-10-22,2026-10-23,35.262499999999996,20.275000000000002,Sedang (Waspada),Sedang (Waspada),True
+34.01,Kabupaten Kulon Progo,DI Yogyakarta,2026-10-23,2026-10-24,20.275000000000002,18.258333333333333,Sedang (Waspada),Sedang (Waspada),True
+34.02,Kabupaten Bantul,DI Yogyakarta,2026-10-21,2026-10-22,22.825,29.166666666666668,Sedang (Waspada),Sedang (Waspada),True
+34.02,Kabupaten Bantul,DI Yogyakarta,2026-10-22,2026-10-23,29.166666666666668,25.84583333333333,Sedang (Waspada),Sedang (Waspada),True
+34.02,Kabupaten Bantul,DI Yogyakarta,2026-10-23,2026-10-24,25.84583333333333,19.495833333333334,Sedang (Waspada),Sedang (Waspada),True
+34.03,Kabupaten Gunungkidul,DI Yogyakarta,2026-10-21,2026-10-22,22.941666666666663,29.97083333333333,Sedang (Waspada),Sedang (Waspada),True
+34.03,Kabupaten Gunungkidul,DI Yogyakarta,2026-10-22,2026-10-23,29.97083333333333,26.4875,Sedang (Waspada),Sedang (Waspada),True
+34.03,Kabupaten Gunungkidul,DI Yogyakarta,2026-10-23,2026-10-24,26.4875,19.829166666666666,Sedang (Waspada),Sedang (Waspada),True
+34.04,Kabupaten Sleman,DI Yogyakarta,2026-10-21,2026-10-22,25.47083333333333,30.458333333333332,Sedang (Waspada),Sedang (Waspada),True
+34.04,Kabupaten Sleman,DI Yogyakarta,2026-10-22,2026-10-23,30.458333333333332,24.829166666666666,Sedang (Waspada),Sedang (Waspada),True
+34.04,Kabupaten Sleman,DI Yogyakarta,2026-10-23,2026-10-24,24.829166666666666,22.933333333333334,Sedang (Waspada),Sedang (Waspada),True
+34.71,Kota Yogyakarta,DI Yogyakarta,2026-10-21,2026-10-22,25.47083333333333,30.458333333333332,Sedang (Waspada),Sedang (Waspada),True
+34.71,Kota Yogyakarta,DI Yogyakarta,2026-10-22,2026-10-23,30.458333333333332,24.829166666666666,Sedang (Waspada),Sedang (Waspada),True
+34.71,Kota Yogyakarta,DI Yogyakarta,2026-10-23,2026-10-24,24.829166666666666,22.933333333333334,Sedang (Waspada),Sedang (Waspada),True
+35.01,Kabupaten Pacitan,Jawa Timur,2026-10-21,2026-10-22,28.558333333333334,32.800000000000004,Sedang (Waspada),Sedang (Waspada),True
+35.01,Kabupaten Pacitan,Jawa Timur,2026-10-22,2026-10-23,32.800000000000004,31.958333333333332,Sedang (Waspada),Sedang (Waspada),True
+35.01,Kabupaten Pacitan,Jawa Timur,2026-10-23,2026-10-24,31.958333333333332,25.962500000000002,Sedang (Waspada),Sedang (Waspada),True
+35.02,Kabupaten Ponorogo,Jawa Timur,2026-10-21,2026-10-22,31.42083333333333,37.69166666666667,Sedang (Waspada),Sedang (Waspada),True
+35.02,Kabupaten Ponorogo,Jawa Timur,2026-10-22,2026-10-23,37.69166666666667,37.645833333333336,Sedang (Waspada),Sedang (Waspada),True
+35.02,Kabupaten Ponorogo,Jawa Timur,2026-10-23,2026-10-24,37.645833333333336,30.379166666666666,Sedang (Waspada),Sedang (Waspada),True
+35.03,Kabupaten Trenggalek,Jawa Timur,2026-10-21,2026-10-22,31.42083333333333,37.69166666666667,Sedang (Waspada),Sedang (Waspada),True
+35.03,Kabupaten Trenggalek,Jawa Timur,2026-10-22,2026-10-23,37.69166666666667,37.645833333333336,Sedang (Waspada),Sedang (Waspada),True
+35.03,Kabupaten Trenggalek,Jawa Timur,2026-10-23,2026-10-24,37.645833333333336,30.379166666666666,Sedang (Waspada),Sedang (Waspada),True
+35.04,Kabupaten Tulungagung,Jawa Timur,2026-10-21,2026-10-22,23.9625,32.449999999999996,Sedang (Waspada),Sedang (Waspada),True
+35.04,Kabupaten Tulungagung,Jawa Timur,2026-10-22,2026-10-23,32.449999999999996,33.4125,Sedang (Waspada),Sedang (Waspada),True
+35.04,Kabupaten Tulungagung,Jawa Timur,2026-10-23,2026-10-24,33.4125,26.425,Sedang (Waspada),Sedang (Waspada),True
+35.05,Kabupaten Blitar,Jawa Timur,2026-10-21,2026-10-22,22.445833333333336,34.516666666666666,Sedang (Waspada),Sedang (Waspada),True
+35.05,Kabupaten Blitar,Jawa Timur,2026-10-22,2026-10-23,34.516666666666666,30.170833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.05,Kabupaten Blitar,Jawa Timur,2026-10-23,2026-10-24,30.170833333333334,19.545833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.06,Kabupaten Kediri,Jawa Timur,2026-10-21,2026-10-22,23.9625,32.449999999999996,Sedang (Waspada),Sedang (Waspada),True
+35.06,Kabupaten Kediri,Jawa Timur,2026-10-22,2026-10-23,32.449999999999996,33.4125,Sedang (Waspada),Sedang (Waspada),True
+35.06,Kabupaten Kediri,Jawa Timur,2026-10-23,2026-10-24,33.4125,26.425,Sedang (Waspada),Sedang (Waspada),True
+35.07,Kabupaten Malang,Jawa Timur,2026-10-21,2026-10-22,22.445833333333336,34.516666666666666,Sedang (Waspada),Sedang (Waspada),True
+35.07,Kabupaten Malang,Jawa Timur,2026-10-22,2026-10-23,34.516666666666666,30.170833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.07,Kabupaten Malang,Jawa Timur,2026-10-23,2026-10-24,30.170833333333334,19.545833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.08,Kabupaten Lumajang,Jawa Timur,2026-10-21,2026-10-22,33.96666666666667,44.15416666666667,Sedang (Waspada),Sedang (Waspada),True
+35.08,Kabupaten Lumajang,Jawa Timur,2026-10-22,2026-10-23,44.15416666666667,47.96666666666667,Sedang (Waspada),Sedang (Waspada),True
+35.08,Kabupaten Lumajang,Jawa Timur,2026-10-23,2026-10-24,47.96666666666667,45.208333333333336,Sedang (Waspada),Sedang (Waspada),True
+35.09,Kabupaten Jember,Jawa Timur,2026-10-21,2026-10-22,69.76666666666667,41.5,Tidak Sehat (Bahaya),Sedang (Waspada),False
+35.09,Kabupaten Jember,Jawa Timur,2026-10-22,2026-10-23,41.5,58.262499999999996,Sedang (Waspada),Tidak Sehat (Bahaya),False
+35.09,Kabupaten Jember,Jawa Timur,2026-10-23,2026-10-24,58.262499999999996,47.47083333333333,Tidak Sehat (Bahaya),Sedang (Waspada),False
+35.1,Kabupaten Banyuwangi,Jawa Timur,2026-10-21,2026-10-22,19.39583333333333,,Sedang (Waspada),,False
+35.11,Kabupaten Bondowoso,Jawa Timur,2026-10-21,2026-10-22,26.15833333333333,24.891666666666666,Sedang (Waspada),Sedang (Waspada),True
+35.11,Kabupaten Bondowoso,Jawa Timur,2026-10-22,2026-10-23,24.891666666666666,27.366666666666664,Sedang (Waspada),Sedang (Waspada),True
+35.11,Kabupaten Bondowoso,Jawa Timur,2026-10-23,2026-10-24,27.366666666666664,26.3,Sedang (Waspada),Sedang (Waspada),True
+35.12,Kabupaten Situbondo,Jawa Timur,2026-10-21,2026-10-22,25.0125,21.7375,Sedang (Waspada),Sedang (Waspada),True
+35.12,Kabupaten Situbondo,Jawa Timur,2026-10-22,2026-10-23,21.7375,20.462500000000002,Sedang (Waspada),Sedang (Waspada),True
+35.12,Kabupaten Situbondo,Jawa Timur,2026-10-23,2026-10-24,20.462500000000002,22.0,Sedang (Waspada),Sedang (Waspada),True
+35.13,Kabupaten Probolinggo,Jawa Timur,2026-10-21,2026-10-22,38.7625,25.508333333333336,Sedang (Waspada),Sedang (Waspada),True
+35.13,Kabupaten Probolinggo,Jawa Timur,2026-10-22,2026-10-23,25.508333333333336,27.745833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.13,Kabupaten Probolinggo,Jawa Timur,2026-10-23,2026-10-24,27.745833333333334,32.458333333333336,Sedang (Waspada),Sedang (Waspada),True
+35.14,Kabupaten Pasuruan,Jawa Timur,2026-10-21,2026-10-22,66.48333333333333,45.29583333333333,Tidak Sehat (Bahaya),Sedang (Waspada),False
+35.14,Kabupaten Pasuruan,Jawa Timur,2026-10-22,2026-10-23,45.29583333333333,60.275,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.14,Kabupaten Pasuruan,Jawa Timur,2026-10-23,2026-10-24,60.275,67.4875,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.15,Kabupaten Sidoarjo,Jawa Timur,2026-10-21,2026-10-22,66.48333333333333,45.29583333333333,Tidak Sehat (Bahaya),Sedang (Waspada),False
+35.15,Kabupaten Sidoarjo,Jawa Timur,2026-10-22,2026-10-23,45.29583333333333,60.275,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.15,Kabupaten Sidoarjo,Jawa Timur,2026-10-23,2026-10-24,60.275,67.4875,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.16,Kabupaten Mojokerto,Jawa Timur,2026-10-21,2026-10-22,115.525,102.97500000000001,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.16,Kabupaten Mojokerto,Jawa Timur,2026-10-22,2026-10-23,102.97500000000001,133.1,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.16,Kabupaten Mojokerto,Jawa Timur,2026-10-23,2026-10-24,133.1,121.75,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.17,Kabupaten Jombang,Jawa Timur,2026-10-21,2026-10-22,115.525,102.97500000000001,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.17,Kabupaten Jombang,Jawa Timur,2026-10-22,2026-10-23,102.97500000000001,133.1,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.17,Kabupaten Jombang,Jawa Timur,2026-10-23,2026-10-24,133.1,121.75,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.18,Kabupaten Nganjuk,Jawa Timur,2026-10-21,2026-10-22,28.566666666666663,40.875,Sedang (Waspada),Sedang (Waspada),True
+35.18,Kabupaten Nganjuk,Jawa Timur,2026-10-22,2026-10-23,40.875,38.38333333333333,Sedang (Waspada),Sedang (Waspada),True
+35.18,Kabupaten Nganjuk,Jawa Timur,2026-10-23,2026-10-24,38.38333333333333,32.920833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.19,Kabupaten Madiun,Jawa Timur,2026-10-21,2026-10-22,30.02083333333333,40.80416666666667,Sedang (Waspada),Sedang (Waspada),True
+35.19,Kabupaten Madiun,Jawa Timur,2026-10-22,2026-10-23,40.80416666666667,37.420833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.19,Kabupaten Madiun,Jawa Timur,2026-10-23,2026-10-24,37.420833333333334,34.579166666666666,Sedang (Waspada),Sedang (Waspada),True
+35.2,Kabupaten Magetan,Jawa Timur,2026-10-21,2026-10-22,65.77499999999999,,Tidak Sehat (Bahaya),,False
+35.21,Kabupaten Ngawi,Jawa Timur,2026-10-21,2026-10-22,30.02083333333333,40.80416666666667,Sedang (Waspada),Sedang (Waspada),True
+35.21,Kabupaten Ngawi,Jawa Timur,2026-10-22,2026-10-23,40.80416666666667,37.420833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.21,Kabupaten Ngawi,Jawa Timur,2026-10-23,2026-10-24,37.420833333333334,34.579166666666666,Sedang (Waspada),Sedang (Waspada),True
+35.22,Kabupaten Bojonegoro,Jawa Timur,2026-10-21,2026-10-22,37.925,44.03333333333333,Sedang (Waspada),Sedang (Waspada),True
+35.22,Kabupaten Bojonegoro,Jawa Timur,2026-10-22,2026-10-23,44.03333333333333,44.791666666666664,Sedang (Waspada),Sedang (Waspada),True
+35.22,Kabupaten Bojonegoro,Jawa Timur,2026-10-23,2026-10-24,44.791666666666664,36.8375,Sedang (Waspada),Sedang (Waspada),True
+35.23,Kabupaten Tuban,Jawa Timur,2026-10-21,2026-10-22,35.416666666666664,37.5875,Sedang (Waspada),Sedang (Waspada),True
+35.23,Kabupaten Tuban,Jawa Timur,2026-10-22,2026-10-23,37.5875,40.266666666666666,Sedang (Waspada),Sedang (Waspada),True
+35.23,Kabupaten Tuban,Jawa Timur,2026-10-23,2026-10-24,40.266666666666666,48.833333333333336,Sedang (Waspada),Sedang (Waspada),True
+35.24,Kabupaten Lamongan,Jawa Timur,2026-10-21,2026-10-22,85.68333333333334,64.57916666666667,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.24,Kabupaten Lamongan,Jawa Timur,2026-10-22,2026-10-23,64.57916666666667,79.83333333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.24,Kabupaten Lamongan,Jawa Timur,2026-10-23,2026-10-24,79.83333333333333,98.33749999999999,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.25,Kabupaten Gresik,Jawa Timur,2026-10-21,2026-10-22,85.68333333333334,64.57916666666667,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.25,Kabupaten Gresik,Jawa Timur,2026-10-22,2026-10-23,64.57916666666667,79.83333333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.25,Kabupaten Gresik,Jawa Timur,2026-10-23,2026-10-24,79.83333333333333,98.33749999999999,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.26,Kabupaten Bangkalan,Jawa Timur,2026-10-21,2026-10-22,78.6875,40.3375,Tidak Sehat (Bahaya),Sedang (Waspada),False
+35.26,Kabupaten Bangkalan,Jawa Timur,2026-10-22,2026-10-23,40.3375,47.449999999999996,Tidak Sehat (Bahaya),Sedang (Waspada),False
+35.26,Kabupaten Bangkalan,Jawa Timur,2026-10-23,2026-10-24,47.449999999999996,66.04583333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.27,Kabupaten Sampang,Jawa Timur,2026-10-21,2026-10-22,42.47916666666666,24.229166666666668,Sedang (Waspada),Sedang (Waspada),True
+35.27,Kabupaten Sampang,Jawa Timur,2026-10-22,2026-10-23,24.229166666666668,27.170833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.27,Kabupaten Sampang,Jawa Timur,2026-10-23,2026-10-24,27.170833333333334,39.275,Sedang (Waspada),Sedang (Waspada),True
+35.28,Kabupaten Pamekasan,Jawa Timur,2026-10-21,2026-10-22,29.21666666666667,21.458333333333332,Sedang (Waspada),Sedang (Waspada),True
+35.28,Kabupaten Pamekasan,Jawa Timur,2026-10-22,2026-10-23,21.458333333333332,21.6375,Sedang (Waspada),Sedang (Waspada),True
+35.28,Kabupaten Pamekasan,Jawa Timur,2026-10-23,2026-10-24,21.6375,28.329166666666666,Sedang (Waspada),Sedang (Waspada),True
+35.29,Kabupaten Sumenep,Jawa Timur,2026-10-21,2026-10-22,19.329166666666666,16.220833333333335,Sedang (Waspada),Sedang (Waspada),True
+35.29,Kabupaten Sumenep,Jawa Timur,2026-10-22,2026-10-23,16.220833333333335,17.1875,Baik (Aman),Sedang (Waspada),False
+35.29,Kabupaten Sumenep,Jawa Timur,2026-10-23,2026-10-24,17.1875,16.341666666666665,Baik (Aman),Sedang (Waspada),False
+35.71,Kota Kediri,Jawa Timur,2026-10-21,2026-10-22,23.9625,32.449999999999996,Sedang (Waspada),Sedang (Waspada),True
+35.71,Kota Kediri,Jawa Timur,2026-10-22,2026-10-23,32.449999999999996,33.4125,Sedang (Waspada),Sedang (Waspada),True
+35.71,Kota Kediri,Jawa Timur,2026-10-23,2026-10-24,33.4125,26.425,Sedang (Waspada),Sedang (Waspada),True
+35.72,Kota Blitar,Jawa Timur,2026-10-21,2026-10-22,23.9625,32.449999999999996,Sedang (Waspada),Sedang (Waspada),True
+35.72,Kota Blitar,Jawa Timur,2026-10-22,2026-10-23,32.449999999999996,33.4125,Sedang (Waspada),Sedang (Waspada),True
+35.72,Kota Blitar,Jawa Timur,2026-10-23,2026-10-24,33.4125,26.425,Sedang (Waspada),Sedang (Waspada),True
+35.73,Kota Malang,Jawa Timur,2026-10-21,2026-10-22,22.3625,25.495833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.73,Kota Malang,Jawa Timur,2026-10-22,2026-10-23,25.495833333333334,31.775000000000002,Sedang (Waspada),Sedang (Waspada),True
+35.73,Kota Malang,Jawa Timur,2026-10-23,2026-10-24,31.775000000000002,24.2375,Sedang (Waspada),Sedang (Waspada),True
+35.74,Kota Probolinggo,Jawa Timur,2026-10-21,2026-10-22,25.65833333333333,21.525000000000002,Sedang (Waspada),Sedang (Waspada),True
+35.74,Kota Probolinggo,Jawa Timur,2026-10-22,2026-10-23,21.525000000000002,25.545833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.74,Kota Probolinggo,Jawa Timur,2026-10-23,2026-10-24,25.545833333333334,32.4875,Sedang (Waspada),Sedang (Waspada),True
+35.75,Kota Pasuruan,Jawa Timur,2026-10-21,2026-10-22,66.48333333333333,45.29583333333333,Tidak Sehat (Bahaya),Sedang (Waspada),False
+35.75,Kota Pasuruan,Jawa Timur,2026-10-22,2026-10-23,45.29583333333333,60.275,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.75,Kota Pasuruan,Jawa Timur,2026-10-23,2026-10-24,60.275,67.4875,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.76,Kota Mojokerto,Jawa Timur,2026-10-21,2026-10-22,115.525,102.97500000000001,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.76,Kota Mojokerto,Jawa Timur,2026-10-22,2026-10-23,102.97500000000001,133.1,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.76,Kota Mojokerto,Jawa Timur,2026-10-23,2026-10-24,133.1,121.75,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.77,Kota Madiun,Jawa Timur,2026-10-21,2026-10-22,30.02083333333333,40.80416666666667,Sedang (Waspada),Sedang (Waspada),True
+35.77,Kota Madiun,Jawa Timur,2026-10-22,2026-10-23,40.80416666666667,37.420833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.77,Kota Madiun,Jawa Timur,2026-10-23,2026-10-24,37.420833333333334,34.579166666666666,Sedang (Waspada),Sedang (Waspada),True
+35.78,Kota Surabaya,Jawa Timur,2026-10-21,2026-10-22,78.6875,40.3375,Tidak Sehat (Bahaya),Sedang (Waspada),False
+35.78,Kota Surabaya,Jawa Timur,2026-10-22,2026-10-23,40.3375,47.449999999999996,Sedang (Waspada),Sedang (Waspada),True
+35.78,Kota Surabaya,Jawa Timur,2026-10-23,2026-10-24,47.449999999999996,66.04583333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+35.79,Kota Batu,Jawa Timur,2026-10-21,2026-10-22,22.445833333333336,34.516666666666666,Sedang (Waspada),Sedang (Waspada),True
+35.79,Kota Batu,Jawa Timur,2026-10-22,2026-10-23,34.516666666666666,30.170833333333334,Sedang (Waspada),Sedang (Waspada),True
+35.79,Kota Batu,Jawa Timur,2026-10-23,2026-10-24,30.170833333333334,19.545833333333334,Sedang (Waspada),Sedang (Waspada),True
+36.01,Kabupaten Pandeglang,Banten,2026-10-21,2026-10-22,79.2625,57.48333333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.01,Kabupaten Pandeglang,Banten,2026-10-22,2026-10-23,57.48333333333333,33.68333333333333,Tidak Sehat (Bahaya),Sedang (Waspada),False
+36.01,Kabupaten Pandeglang,Banten,2026-10-23,2026-10-24,33.68333333333333,35.27916666666667,Sedang (Waspada),Sedang (Waspada),True
+36.02,Kabupaten Lebak,Banten,2026-10-21,2026-10-22,122.24583333333334,102.06666666666666,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.02,Kabupaten Lebak,Banten,2026-10-22,2026-10-23,102.06666666666666,74.99166666666666,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.02,Kabupaten Lebak,Banten,2026-10-23,2026-10-24,74.99166666666666,75.05416666666666,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.03,Kabupaten Tangerang,Banten,2026-10-21,2026-10-22,122.24583333333334,102.06666666666666,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.03,Kabupaten Tangerang,Banten,2026-10-22,2026-10-23,102.06666666666666,74.99166666666666,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.03,Kabupaten Tangerang,Banten,2026-10-23,2026-10-24,74.99166666666666,75.05416666666666,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.04,Kabupaten Serang,Banten,2026-10-21,2026-10-22,97.325,71.9875,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.04,Kabupaten Serang,Banten,2026-10-22,2026-10-23,71.9875,49.387499999999996,Tidak Sehat (Bahaya),Sedang (Waspada),False
+36.04,Kabupaten Serang,Banten,2026-10-23,2026-10-24,49.387499999999996,51.479166666666664,Tidak Sehat (Bahaya),Sedang (Waspada),False
+36.71,Kota Tangerang,Banten,2026-10-21,2026-10-22,48.57916666666667,45.17916666666667,Tidak Sehat (Bahaya),Sedang (Waspada),False
+36.71,Kota Tangerang,Banten,2026-10-22,2026-10-23,45.17916666666667,57.02916666666667,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.71,Kota Tangerang,Banten,2026-10-23,2026-10-24,57.02916666666667,64.44583333333334,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.72,Kota Cilegon,Banten,2026-10-21,2026-10-22,97.325,71.9875,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.72,Kota Cilegon,Banten,2026-10-22,2026-10-23,71.9875,49.387499999999996,Tidak Sehat (Bahaya),Sedang (Waspada),False
+36.72,Kota Cilegon,Banten,2026-10-23,2026-10-24,49.387499999999996,51.479166666666664,Tidak Sehat (Bahaya),Sedang (Waspada),False
+36.73,Kota Serang,Banten,2026-10-21,2026-10-22,97.325,71.9875,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.73,Kota Serang,Banten,2026-10-22,2026-10-23,71.9875,49.387499999999996,Tidak Sehat (Bahaya),Sedang (Waspada),False
+36.73,Kota Serang,Banten,2026-10-23,2026-10-24,49.387499999999996,51.479166666666664,Tidak Sehat (Bahaya),Sedang (Waspada),False
+36.74,Kota Tangerang Selatan,Banten,2026-10-21,2026-10-22,112.87083333333334,111.59166666666665,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.74,Kota Tangerang Selatan,Banten,2026-10-22,2026-10-23,111.59166666666665,102.125,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True
+36.74,Kota Tangerang Selatan,Banten,2026-10-23,2026-10-24,102.125,99.45833333333333,Tidak Sehat (Bahaya),Tidak Sehat (Bahaya),True

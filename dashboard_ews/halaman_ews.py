@@ -28,6 +28,12 @@ def ventilasi(kmh):
     return "lemah" if kmh < 7.2 else ("sedang" if kmh < 14.4 else "baik")
 
 
+def tampil_prediksi(nilai, status):
+    if pd.isna(nilai):
+        return f"{EWS[int(status)]['nama']} ({EWS[int(status)]['sebutan']})"
+    return f"{nilai:.1f} µg/m³"
+
+
 kepala(
     "EWS harian (H+1)",
     "Status kualitas udara besok untuk masyarakat umum, rumah sakit, dan dinas lingkungan hidup daerah.",
@@ -75,7 +81,7 @@ def badan():
     st.subheader("Status kota-kota besar besok")
     grid("g6", *[
         f'<div class="kartu kota-strip" style="--sb:{EWS[r.status]["warna"]}"><div class="nm">{r.nama}</div>'
-        f'<div class="vl">{r.pm_besok:.0f} <span style="font-size:.8rem;font-weight:500;color:#475569">µg/m³</span></div>'
+        f'<div class="vl">{tampil_prediksi(r.pm_besok, r.status)}</div>'
         f'{pill(r.status, tampil="sebutan")}</div>'
         for r in utama.itertuples()])
 
@@ -113,7 +119,7 @@ def badan():
                     for r in t.itertuples():
                         st_ = EWS[r.status]
                         warna[r.kode_kabkota] = st_["warna"]
-                        tips[r.kode_kabkota] = (f"<b>{r.kota}</b><br>{r.provinsi}<br>Prediksi besok {r.pm_besok:.1f} µg/m³ "
+                        tips[r.kode_kabkota] = (f"<b>{r.kota}</b><br>{r.provinsi}<br>Prediksi besok {tampil_prediksi(r.pm_besok, r.status)} "
                                                 f"(hari ini {r.pm_ini:.1f})<br>Status {st_['nama']} ({st_['sebutan']})")
                     legenda = "".join(f'<span class="pill" style="background:{x["warna"]};color:{x["teks"]}">{x["nama"]} ({x["sebutan"]})</span>' for x in EWS)
                 st.markdown(f'<div style="display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 8px">{legenda}</div>', unsafe_allow_html=True)
@@ -131,9 +137,9 @@ def badan():
                 f'<div class="jud" style="font-size:1.05rem">{row["kota"]}</div>'
                 f'<div class="catatan">{row["provinsi"]} · prediksi untuk {BESOK:%d %b %Y}</div>'
                 f'<div style="margin:12px 0 4px">{pill(int(row["status"]), besar=True, tampil="lengkap")}</div>'
-                f'<div class="angka">{row["pm_besok"]:.1f} <small>µg/m³</small></div>'
+                f'<div class="angka">{tampil_prediksi(row["pm_besok"], row["status"])}</div>'
                 f'<div class="kv"><span>PM2.5 hari ini (aktual)</span><b>{row["pm_ini"]:.1f}</b></div>'
-                f'<div class="kv"><span>Perubahan</span><b>{"tetap" if abs(naik) < 0.05 else ("naik " if naik > 0 else "turun ") + f"{abs(naik):.1f}"}</b></div>'
+                f'<div class="kv"><span>Perubahan</span><b>{"tidak tersedia untuk model kategori" if pd.isna(naik) else ("tetap" if abs(naik) < 0.05 else ("naik " if naik > 0 else "turun ") + f"{abs(naik):.1f}")}</b></div>'
                 f'<div class="kv"><span>Kecepatan angin hari ini</span><b>{angin}</b></div>'
                 f'<div class="kv"><span>Ventilasi udara</span><b>{ventilasi(kmh)}</b></div>'
                 f'<div class="jud" style="margin-top:16px">Rekomendasi</div>'
@@ -147,11 +153,13 @@ def badan():
         st.subheader("Prediksi tertinggi besok")
         st.caption("Sepuluh kabupaten/kota dengan prediksi PM2.5 tertinggi pada filter yang dipilih. "
                    "Faktor yang diandalkan model dibahas di halaman Analitik & Evaluasi.")
-        top = t.sort_values("pm_besok", ascending=False).head(10)
-        mx = max(float(top["pm_besok"].max()), 1.0)
+        mode_kategori = t["pm_besok"].isna().all()
+        top = (t.sort_values("status", ascending=False).head(10)
+               if mode_kategori else t.sort_values("pm_besok", ascending=False).head(10))
+        mx = max(float(top["pm_besok"].max()), 1.0) if not mode_kategori else 1.0
         baris = "".join(
             f'<tr><td class="no">{i}</td><td><b>{r.kota}</b></td><td>{r.provinsi}</td><td class="n">{r.pm_ini:.1f}</td>'
-            f'<td class="n">{r.pm_besok:.1f}<span class="mini"><i style="width:{r.pm_besok / mx * 100:.0f}%;'
+            f'<td class="n">{tampil_prediksi(r.pm_besok, r.status)}<span class="mini"><i style="width:{70 if mode_kategori else r.pm_besok / mx * 100:.0f}%;'
             f'background:{EWS[r.status]["warna"]}"></i></span></td><td>{pill(r.status)}</td></tr>'
             for i, r in enumerate(top.itertuples(), 1))
         st.markdown('<table class="tabelk"><thead><tr><th></th><th>Kabupaten/kota</th><th>Provinsi</th>'

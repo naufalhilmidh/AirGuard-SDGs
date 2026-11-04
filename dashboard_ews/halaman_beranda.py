@@ -19,12 +19,20 @@ def panel_pratinjau():
         f'<div class="tg"><div class="n">{jumlah.get(s["kode"], 0)}</div>'
         f'<div class="l"><span class="t" style="background:{s["warna"]}"></span>{s["sebutan"]}</div></div>'
         for s in EWS)
-    atas = TB.sort_values("pm_besok", ascending=False).head(4)
-    mx = max(float(atas["pm_besok"].max()), 1.0)
-    baris = "".join(
-        f'<div class="bar"><span>{x.nama}</span><div class="tr"><i style="width:{x.pm_besok / mx * 100:.0f}%;'
-        f'background:{EWS[x.status]["warna"]}"></i></div><b>{x.pm_besok:.0f}</b></div>'
-        for x in atas.itertuples())
+    mode_kategori = TB["pm_besok"].isna().all()
+    atas = (TB.sort_values("status", ascending=False).head(4)
+            if mode_kategori else TB.sort_values("pm_besok", ascending=False).head(4))
+    mx = max(float(atas["pm_besok"].max()), 1.0) if not mode_kategori else 1.0
+    if mode_kategori:
+        baris = "".join(
+            f'<div class="bar"><span>{x.nama}</span><div class="tr"><i style="width:70%;'
+            f'background:{EWS[x.status]["warna"]}"></i></div><b>{EWS[x.status]["nama"]}</b></div>'
+            for x in atas.itertuples())
+    else:
+        baris = "".join(
+            f'<div class="bar"><span>{x.nama}</span><div class="tr"><i style="width:{x.pm_besok / mx * 100:.0f}%;'
+            f'background:{EWS[x.status]["warna"]}"></i></div><b>{x.pm_besok:.0f}</b></div>'
+            for x in atas.itertuples())
     return (f'<div class="panel"><div class="ph"><span>Prediksi untuk {BESOK:%d %b %Y}</span>'
             f'<span>{len(TB)} kabupaten/kota</span></div><div class="tiga">{tiga}</div>'
             f'<div class="judulp">Prediksi PM2.5 tertinggi (µg/m³)</div>{baris}</div>')

@@ -30,6 +30,14 @@ EWS = [
     {"kode": 2, "nama": "Tidak sehat", "sebutan": "Bahaya", "warna": "#EF4444", "teks": "#FFFFFF", "rentang": "di atas 55,0 µg/m³"},
 ]
 BATAS_BAHAYA = BATAS[1]
+LABEL_STATUS = {
+    "Baik (Aman)": 0,
+    "Sedang (Waspada)": 1,
+    "Tidak Sehat (Bahaya)": 2,
+    "Baik": 0,
+    "Sedang": 1,
+    "Tidak Sehat": 2,
+}
 
 
 def kode_status(nilai):
@@ -189,9 +197,37 @@ def muat_data():
     else:
         pred, tak1 = _samakan_nama(_kota(pred))
 
-    ada = pred["pm2_5_aktual"].notna()
-    pred["st_aktual"] = np.where(ada, kode_status(pred["pm2_5_aktual"].fillna(0)), -1).astype("int8")
-    pred["st_prediksi"] = kode_status(pred["pm2_5_prediksi"]).astype("int8")
+    # Output terbaru tim adalah klasifikasi kategori, bukan prediksi angka.
+    # Dashboard tetap memakai nama status internal yang sama, tetapi tidak
+    # mengarang nilai pm2_5_prediksi dari kategori.
+    mode_kategori = "kategori_prediksi" in pred.columns
+    if mode_kategori:
+        pred["st_prediksi"] = pred["kategori_prediksi"].map(LABEL_STATUS).fillna(-1).astype("int8")
+
+        if "kategori_aktual" in pred.columns:
+            pred["st_aktual"] = pred["kategori_aktual"].map(LABEL_STATUS).fillna(-1).astype("int8")
+        else:
+            pred["st_aktual"] = -1
+
+        # Nilai aktual numerik diambil dari target preprocessed berdasarkan
+        # tanggal target. Nilai prediksi numerik memang tidak tersedia.
+        if "target_pm2_5" in pre.columns:
+            aktual = pre[["kota", "tanggal", "target_pm2_5"]].copy()
+            aktual["tanggal_prediksi"] = aktual["tanggal"] + pd.Timedelta(days=1)
+            aktual = aktual[["kota", "tanggal_prediksi", "target_pm2_5"]]
+            aktual = aktual.rename(columns={"target_pm2_5": "pm2_5_aktual"})
+            pred = pred.drop(columns=["pm2_5_aktual"], errors="ignore").merge(
+                aktual, on=["kota", "tanggal_prediksi"], how="left"
+            )
+        else:
+            pred["pm2_5_aktual"] = np.nan
+        pred["pm2_5_prediksi"] = np.nan
+        pred.attrs["mode_kategori"] = True
+    else:
+        ada = pred["pm2_5_aktual"].notna()
+        pred["st_aktual"] = np.where(ada, kode_status(pred["pm2_5_aktual"].fillna(0)), -1).astype("int8")
+        pred["st_prediksi"] = kode_status(pred["pm2_5_prediksi"]).astype("int8")
+        pred.attrs["mode_kategori"] = False
 
     for df in (pred, pre):  # kategori: filter dan groupby jauh lebih cepat
         df["kota"] = df["kota"].astype("category")
@@ -215,6 +251,34 @@ def muat_klaster():
 def tabel_besok():
     """Satu baris per kabupaten/kota: PM2.5 hari ini, prediksi besok, status, angin."""
     pred, pre, *_ = muat_data()
+
+    if pred.attrs.get("mode_kategori", False):
+        # File ini dibuat oleh notebooks/04_modeling/uji_model_airguard.py.
+        depan = _asli("airguard_prediksi_besok.csv", parse_dates=["tanggal_input", "tanggal_prediksi"])
+        if depan is None:
+            raise FileNotFoundError(
+                "Mode klasifikasi membutuhkan airguard_prediksi_besok.csv. "
+                "Jalankan uji_model_airguard.py --mode besok terlebih dahulu."
+            )
+        depan, _ = _samakan_nama(_kota(depan))
+        depan["status"] = depan["kategori_prediksi"].map(LABEL_STATUS).astype("int8")
+        t = depan[["kota", "tanggal_input", "tanggal_prediksi", "pm2_5_hari_ini", "status"]].copy()
+        t = t.rename(columns={"pm2_5_hari_ini": "pm_ini"})
+        t["pm_besok"] = np.nan
+        t["perubahan"] = np.nan
+        akhir = t["tanggal_input"].max()
+        besok = t["tanggal_prediksi"].max()
+        if "wind_speed_10m" in pre.columns:
+            w = pre[pre["tanggal"] == akhir].set_index("kota")["wind_speed_10m"]
+            w.index = w.index.astype(str)
+            t["angin_kmh"] = t["kota"].astype(str).map(w)
+        else:
+            t["angin_kmh"] = np.nan
+        t = t.merge(WILAYAH, on="kota", how="left")
+        t["provinsi"] = t["provinsi"].astype(str)
+        t["nama"] = t["kota"].map(nama_pendek)
+        return t.rename(columns={"latitude": "lat", "longitude": "lon"}), akhir, besok
+
     akhir = pred.loc[pred["pm2_5_aktual"].notna(), "tanggal_prediksi"].max()
     besok = akhir + pd.Timedelta(days=1)
     ini = pred[pred["tanggal_prediksi"] == akhir].set_index("kota")["pm2_5_aktual"]
